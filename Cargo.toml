@@ -29,6 +29,10 @@ members = [
     "examples/rwa-country-allow",
     "examples/rwa-country-restrict",
 >>>>>>> df646ecd (feat(rwa): add country_allow and country_restrict compliance modules)
+=======
+    "examples/rwa-max-balance",
+    "examples/rwa-supply-limit",
+>>>>>>> 8c5d6fae (feat(rwa): add max_balance and supply_limit compliance modules)
     "examples/sac-admin-generic",
     "examples/sac-admin-wrapper",
     "examples/multisig-smart-account/*",
