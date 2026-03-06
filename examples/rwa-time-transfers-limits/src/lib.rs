@@ -1,5 +1,6 @@
 #![no_std]
 
+<<<<<<< HEAD
 use soroban_sdk::{
     contract, contractimpl, contracttype, panic_with_error, vec, Address, Env, String, Vec,
 };
@@ -25,10 +26,18 @@ const MAX_LIMITS_PER_TOKEN: u32 = 4;
 enum DataKey {
     Admin,
 }
+=======
+use soroban_sdk::{contract, contractimpl, Address, String, Vec};
+use stellar_tokens::rwa::compliance::ComplianceHook;
+use stellar_tokens::rwa::compliance_modules::time_transfers_limits::{
+    Limit, TimeTransfersLimits,
+};
+>>>>>>> 08d06e29 (feat(rwa): add transfer_restrict, time_transfers_limits, and initial_lockup_period modules)
 
 #[contract]
 pub struct TimeTransfersLimitsContract;
 
+<<<<<<< HEAD
 fn set_admin(e: &Env, admin: &Address) {
     e.storage().instance().set(&DataKey::Admin, admin);
 }
@@ -200,3 +209,7 @@ impl TimeTransfersLimits for TimeTransfersLimitsContract {
         set_compliance_address(e, &compliance);
     }
 }
+=======
+#[contractimpl(contracttrait)]
+impl TimeTransfersLimits for TimeTransfersLimitsContract {}
+>>>>>>> 08d06e29 (feat(rwa): add transfer_restrict, time_transfers_limits, and initial_lockup_period modules)

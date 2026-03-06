@@ -1542,6 +1542,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "rwa-initial-lockup-period"
+version = "0.6.0"
+dependencies = [
+ "soroban-sdk",
+ "stellar-tokens",
+]
+
+[[package]]
 name = "rwa-max-balance"
 version = "0.6.0"
 dependencies = [
@@ -1551,6 +1559,22 @@ dependencies = [
 
 [[package]]
 name = "rwa-supply-limit"
+version = "0.6.0"
+dependencies = [
+ "soroban-sdk",
+ "stellar-tokens",
+]
+
+[[package]]
+name = "rwa-time-transfers-limits"
+version = "0.6.0"
+dependencies = [
+ "soroban-sdk",
+ "stellar-tokens",
+]
+
+[[package]]
+name = "rwa-transfer-restrict"
 version = "0.6.0"
 dependencies = [
  "soroban-sdk",
