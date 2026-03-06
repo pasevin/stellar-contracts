@@ -33,6 +33,11 @@ members = [
     "examples/rwa-max-balance",
     "examples/rwa-supply-limit",
 >>>>>>> 8c5d6fae (feat(rwa): add max_balance and supply_limit compliance modules)
+=======
+    "examples/rwa-time-transfers-limits",
+    "examples/rwa-transfer-restrict",
+    "examples/rwa-initial-lockup-period",
+>>>>>>> 08d06e29 (feat(rwa): add transfer_restrict, time_transfers_limits, and initial_lockup_period modules)
     "examples/sac-admin-generic",
     "examples/sac-admin-wrapper",
     "examples/multisig-smart-account/*",
