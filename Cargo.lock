@@ -1542,22 +1542,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rwa-max-balance"
-version = "0.6.0"
-dependencies = [
- "soroban-sdk",
- "stellar-tokens",
-]
-
-[[package]]
-name = "rwa-supply-limit"
-version = "0.6.0"
-dependencies = [
- "soroban-sdk",
- "stellar-tokens",
-]
-
-[[package]]
 name = "ryu"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
