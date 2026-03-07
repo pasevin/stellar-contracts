@@ -10,8 +10,8 @@ use stellar_tokens::rwa::{
         },
         initial_lockup_period::{
             storage::{
-                get_internal_balance, get_locks, get_lockup_period, get_total_locked, set_internal_balance,
-                set_locks, set_lockup_period, set_total_locked,
+                get_internal_balance, get_locks, get_lockup_period, get_total_locked,
+                set_internal_balance, set_locks, set_lockup_period, set_total_locked,
             },
             InitialLockupPeriod, LockedTokens, LockupPeriodSet,
         },

@@ -1,6 +1,8 @@
 #![no_std]
 
-use soroban_sdk::{contract, contractimpl, contracttype, panic_with_error, vec, Address, Env, String, Vec};
+use soroban_sdk::{
+    contract, contractimpl, contracttype, panic_with_error, vec, Address, Env, String, Vec,
+};
 use stellar_tokens::rwa::{
     compliance::ComplianceHook,
     compliance_modules::{
