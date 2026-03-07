@@ -9,10 +9,7 @@ use stellar_tokens::rwa::{
             verify_required_hooks,
         },
         supply_limit::{
-            storage::{
-                get_internal_supply, get_supply_limit, get_supply_limit_or_panic, set_internal_supply,
-                set_supply_limit,
-            },
+            storage::{get_internal_supply, get_supply_limit_or_panic, set_internal_supply, set_supply_limit},
             SupplyLimit, SupplyLimitSet,
         },
     },
