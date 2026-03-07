@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 # Master deploy script: deploys ALL contracts, configures every module, then locks.
 #
-# CRITICAL ordering: every module admin function uses `require_compliance_auth`,
-# which is a no-op before `set_compliance_address` but requires the Compliance
-# contract's auth after. Since the CLI can't authorize as the Compliance contract,
-# ALL configuration must happen BEFORE calling `set_compliance_address`.
+# CRITICAL ordering: module constructors store a bootstrap admin. Before
+# `set_compliance_address`, privileged module actions require that admin; after
+# the bind step they require the Compliance contract's auth instead. Since the
+# CLI can't authorize as the Compliance contract, ALL configuration must happen
+# BEFORE calling `set_compliance_address`.
 #
 # Flow:
 #   1. Deploy infrastructure (IRS, Verifier, Compliance, Token)
 #   2. Bind token to compliance + IRS
-#   3. Deploy all 7 compliance modules
+#   3. Deploy all 7 compliance modules with bootstrap admin
 #   4. Configure every module (IRS, rules, limits, allowlists)
-#   5. Set compliance address on all modules (locks admin forever)
+#   5. Set compliance address on all modules (transfers control to compliance)
 #
 # After this: run wire.sh, then test scripts.
 #
@@ -103,7 +104,8 @@ deploy_module() {
   local ADDR
   ADDR=$(stellar contract deploy \
     --wasm "$WASM_DIR/$WASM_NAME" \
-    --source "$SOURCE" --network "$NETWORK")
+    --source "$SOURCE" --network "$NETWORK" \
+    -- --admin "$ADMIN")
   echo "  $NAME: $ADDR" >&2
   echo "$ADDR"
 }
@@ -116,13 +118,13 @@ SUPPLY_LIMIT=$(deploy_module supply-limit)
 TIME_TRANSFERS=$(deploy_module time-transfers-limits)
 TRANSFER_RESTRICT=$(deploy_module transfer-restrict)
 
-# ── Step 4: Configure ALL modules (before compliance lock!) ──
+# ── Step 4: Configure ALL modules (before compliance bind) ──
 #
-# After set_compliance_address, admin calls require Compliance contract auth
-# which is impossible from the CLI. So ALL config goes here.
+# After set_compliance_address, module admin calls require Compliance contract
+# auth which is impossible from the CLI. So ALL config goes here.
 
 echo ""
-echo "=== Step 4/5: Configuring modules (before compliance lock) ==="
+echo "=== Step 4/5: Configuring modules (before compliance bind) ==="
 
 # 4a. Set IRS on identity-aware modules
 echo "  Setting IRS on identity-aware modules..."
@@ -166,7 +168,7 @@ invoke "$TRANSFER_RESTRICT" allow_user --token "$TOKEN" --user "$ADMIN"
 
 echo "  All modules configured."
 
-# ── Step 5: Set compliance address on ALL modules (locks admin) ──
+# ── Step 5: Set compliance address on ALL modules (hands off to compliance) ──
 
 echo ""
 echo "=== Step 5/5: Locking all modules to compliance ==="
@@ -174,7 +176,7 @@ for MODULE_ADDR in "$COUNTRY_ALLOW" "$COUNTRY_RESTRICT" "$INITIAL_LOCKUP" \
   "$MAX_BALANCE" "$SUPPLY_LIMIT" "$TIME_TRANSFERS" "$TRANSFER_RESTRICT"; do
   invoke "$MODULE_ADDR" set_compliance_address --compliance "$COMPLIANCE"
 done
-echo "  All 7 modules locked. Admin functions now require Compliance contract auth."
+echo "  All 7 modules bound. Admin functions now require Compliance contract auth."
 
 # ── Save addresses ──
 
@@ -205,7 +207,7 @@ echo ""
 echo "=== Deployment Complete ==="
 echo "  Infrastructure: IRS, Verifier, Compliance, Token"
 echo "  Modules:        7/7 deployed and configured"
-echo "  Status:         All modules locked to Compliance"
+echo "  Status:         All modules bound to Compliance"
 echo "  Addresses:      $ADDR_FILE"
 echo ""
 echo "Next steps:"

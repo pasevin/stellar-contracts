@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Deploy a single compliance module, configure it, then lock + wire.
+# Deploy a single compliance module, configure it, then bind + wire.
 # Usage: ./deploy-module.sh <module-name> [hook1 hook2 ...]
 # Example: ./deploy-module.sh country-allow CanTransfer CanCreate
 #
 # This script handles the correct ordering:
-#   1. Deploy the module
-#   2. Configure (IRS, defaults) — while admin is still open
-#   3. Set compliance address (locks admin)
+#   1. Deploy the module with bootstrap admin
+#   2. Configure (IRS, defaults) — while admin is still active
+#   3. Set compliance address (hands off to compliance)
 #   4. Register on hooks (optional)
 #
 # Prerequisites: deploy.sh must have been run (needs addresses file for infra).
@@ -65,10 +65,11 @@ COMPLIANCE=$(read_addr "['contracts']['compliance']")
 echo "=== Deploying $MODULE ==="
 MODULE_ADDR=$(stellar contract deploy \
   --wasm "$WASM_PATH" \
-  --source "$SOURCE" --network "$NETWORK")
+  --source "$SOURCE" --network "$NETWORK" \
+  -- --admin "$ADMIN")
 echo "  Address: $MODULE_ADDR"
 
-# ── Step 2: Configure (before compliance lock) ──
+# ── Step 2: Configure (before compliance bind) ──
 IRS_MODULES=("country-allow" "country-restrict" "max-balance" "time-transfers-limits")
 for irs_mod in "${IRS_MODULES[@]}"; do
   if [ "$MODULE" = "$irs_mod" ]; then
@@ -78,8 +79,8 @@ for irs_mod in "${IRS_MODULES[@]}"; do
   fi
 done
 
-# ── Step 3: Set compliance address (locks admin) ──
-echo "  Locking to compliance..."
+# ── Step 3: Set compliance address (hands off to compliance) ──
+echo "  Binding to compliance..."
 invoke "$MODULE_ADDR" set_compliance_address --compliance "$COMPLIANCE"
 
 # ── Step 4: Register on hooks ──

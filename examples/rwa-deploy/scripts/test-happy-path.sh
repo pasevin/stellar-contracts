@@ -2,12 +2,12 @@
 # Test happy path: register investor identity, mint tokens, verify balance.
 #
 # Prerequisites:
-#   - deploy.sh has been run (modules configured + locked)
+#   - deploy.sh has been run (modules configured + bound)
 #   - wire.sh has been run (modules registered on hooks)
 #
 # This script does NOT try to configure modules (add_allowed_country, etc.)
-# because those functions are locked behind compliance auth after deploy.sh
-# calls set_compliance_address. All module config happens in deploy.sh.
+# because those functions require compliance auth after deploy.sh
+# binds each module to the Compliance contract. All module config happens in deploy.sh.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
