@@ -56,6 +56,31 @@ invoke() {
     -- "${@:2}"
 }
 
+write_addresses() {
+  cat > "$ADDR_FILE" <<EOF
+{
+  "network": "$NETWORK",
+  "source": "$SOURCE",
+  "admin": "$ADMIN",
+  "contracts": {
+    "irs": "$IRS",
+    "verifier": "$VERIFIER",
+    "compliance": "$COMPLIANCE",
+    "token": "$TOKEN"
+  },
+  "modules": {
+    "country_allow": "$COUNTRY_ALLOW",
+    "country_restrict": "$COUNTRY_RESTRICT",
+    "initial_lockup_period": "$INITIAL_LOCKUP",
+    "max_balance": "$MAX_BALANCE",
+    "supply_limit": "$SUPPLY_LIMIT",
+    "time_transfers_limits": "$TIME_TRANSFERS",
+    "transfer_restrict": "$TRANSFER_RESTRICT"
+  }
+}
+EOF
+}
+
 # ── Step 1: Deploy infrastructure ──
 
 echo "=== Step 1/5: Infrastructure ==="
@@ -117,6 +142,10 @@ MAX_BALANCE=$(deploy_module max-balance)
 SUPPLY_LIMIT=$(deploy_module supply-limit)
 TIME_TRANSFERS=$(deploy_module time-transfers-limits)
 TRANSFER_RESTRICT=$(deploy_module transfer-restrict)
+
+# Persist deployed addresses early so `wire.sh` and manual recovery can resume
+# if a later configuration or bind step is interrupted.
+write_addresses
 
 # ── Step 4: Configure ALL modules (before compliance bind) ──
 #
@@ -180,28 +209,7 @@ echo "  All 7 modules bound. Admin functions now require Compliance contract aut
 
 # ── Save addresses ──
 
-cat > "$ADDR_FILE" <<EOF
-{
-  "network": "$NETWORK",
-  "source": "$SOURCE",
-  "admin": "$ADMIN",
-  "contracts": {
-    "irs": "$IRS",
-    "verifier": "$VERIFIER",
-    "compliance": "$COMPLIANCE",
-    "token": "$TOKEN"
-  },
-  "modules": {
-    "country_allow": "$COUNTRY_ALLOW",
-    "country_restrict": "$COUNTRY_RESTRICT",
-    "initial_lockup_period": "$INITIAL_LOCKUP",
-    "max_balance": "$MAX_BALANCE",
-    "supply_limit": "$SUPPLY_LIMIT",
-    "time_transfers_limits": "$TIME_TRANSFERS",
-    "transfer_restrict": "$TRANSFER_RESTRICT"
-  }
-}
-EOF
+write_addresses
 
 echo ""
 echo "=== Deployment Complete ==="

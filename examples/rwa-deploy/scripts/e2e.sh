@@ -21,20 +21,12 @@ ADDR_FILE="$ROOT_DIR/examples/rwa-deploy/testnet-addresses.json"
 SOURCE="${STELLAR_SOURCE:-alice}"
 NETWORK="${STELLAR_NETWORK:-testnet}"
 
+. "$SCRIPT_DIR/common.sh"
+
 SKIP_BUILD=false
 if [ "${1:-}" = "--skip-build" ]; then
   SKIP_BUILD=true
 fi
-
-invoke() {
-  stellar contract invoke --id "$1" \
-    --source "$SOURCE" --network "$NETWORK" \
-    -- "${@:2}"
-}
-
-read_addr() {
-  python3 -c "import json; d=json.load(open('$ADDR_FILE')); print(d$1)"
-}
 
 PASS=0
 FAIL=0
@@ -89,11 +81,11 @@ IRS=$(read_addr "['contracts']['irs']")
 INVESTOR="$ADMIN"
 
 echo "Registering investor ($INVESTOR) in IRS..."
-invoke "$IRS" add_identity \
-  --account "$INVESTOR" \
-  --identity "$INVESTOR" \
-  --initial_profiles '[{"country":{"Individual":{"Citizenship":840}},"metadata":null}]' \
-  --operator "$ADMIN"
+ensure_identity_registered \
+  "$IRS" \
+  "$INVESTOR" \
+  "$INVESTOR" \
+  '[{"country":{"Individual":{"Citizenship":840}},"metadata":null}]'
 echo "  Identity registered (US citizen, country 840)."
 
 # Generate test-only keypairs for country enforcement tests (no funding needed)
@@ -103,19 +95,19 @@ stellar keys generate e2e-investor-3 2>/dev/null || true
 INVESTOR3=$(stellar keys address e2e-investor-3)
 
 echo "Registering investor-2 ($INVESTOR2) with Japan (392)..."
-invoke "$IRS" add_identity \
-  --account "$INVESTOR2" \
-  --identity "$INVESTOR2" \
-  --initial_profiles '[{"country":{"Individual":{"Citizenship":392}},"metadata":null}]' \
-  --operator "$ADMIN"
+ensure_identity_registered \
+  "$IRS" \
+  "$INVESTOR2" \
+  "$INVESTOR2" \
+  '[{"country":{"Individual":{"Citizenship":392}},"metadata":null}]'
 echo "  Identity registered (Japan, 392 — not in CountryAllow list)."
 
 echo "Registering investor-3 ($INVESTOR3) with DPRK (408)..."
-invoke "$IRS" add_identity \
-  --account "$INVESTOR3" \
-  --identity "$INVESTOR3" \
-  --initial_profiles '[{"country":{"Individual":{"Citizenship":408}},"metadata":null}]' \
-  --operator "$ADMIN"
+ensure_identity_registered \
+  "$IRS" \
+  "$INVESTOR3" \
+  "$INVESTOR3" \
+  '[{"country":{"Individual":{"Citizenship":408}},"metadata":null}]'
 echo "  Identity registered (DPRK, 408 — in CountryRestrict list)."
 echo ""
 
@@ -131,10 +123,14 @@ SUPPLY_LIMIT=$(read_addr "['modules']['supply_limit']")
 
 assert_pass() {
   local DESC=$1; shift
+  local OUTPUT
   echo "  [$DESC]"
-  if "$@" >/dev/null 2>&1; then
+  if OUTPUT=$("$@" 2>&1); then
     echo "    PASS"
     PASS=$((PASS + 1))
+  elif retryable_invoke_error "$OUTPUT"; then
+    echo "    FAIL (transient Stellar CLI error)"
+    FAIL=$((FAIL + 1))
   else
     echo "    FAIL (expected success)"
     FAIL=$((FAIL + 1))
@@ -147,6 +143,9 @@ assert_fail() {
   local OUTPUT
   if OUTPUT=$("$@" 2>&1); then
     echo "    FAIL (expected rejection but succeeded)"
+    FAIL=$((FAIL + 1))
+  elif retryable_invoke_error "$OUTPUT"; then
+    echo "    FAIL (transient Stellar CLI error)"
     FAIL=$((FAIL + 1))
   else
     echo "    PASS (correctly rejected)"
