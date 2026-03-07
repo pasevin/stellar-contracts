@@ -108,7 +108,7 @@ fn test_country_allow() {
     register_investor(&ts, &investor_us, &id_us, us_country_data());
     register_investor(&ts, &investor_de, &id_de, de_country_data());
 
-    let module = ts.env.register(CountryAllowContract, ());
+    let module = ts.env.register(CountryAllowContract, (&ts.admin,));
     wire_module(&ts, &module, &[ComplianceHook::CanTransfer, ComplianceHook::CanCreate]);
 
     let mod_client = CountryAllowContractClient::new(&ts.env, &module);
@@ -140,7 +140,7 @@ fn test_country_restrict() {
     register_investor(&ts, &investor_us, &id_us, us_country_data());
     register_investor(&ts, &investor_de, &id_de, de_country_data());
 
-    let module = ts.env.register(CountryRestrictContract, ());
+    let module = ts.env.register(CountryRestrictContract, (&ts.admin,));
     wire_module(&ts, &module, &[ComplianceHook::CanTransfer, ComplianceHook::CanCreate]);
 
     let mod_client = CountryRestrictContractClient::new(&ts.env, &module);
@@ -172,7 +172,7 @@ fn test_max_balance() {
     register_investor(&ts, &investor_a, &id_a, us_country_data());
     register_investor(&ts, &investor_b, &id_b, us_country_data());
 
-    let module = ts.env.register(MaxBalanceContract, ());
+    let module = ts.env.register(MaxBalanceContract, (&ts.admin,));
     wire_module(
         &ts,
         &module,
@@ -223,7 +223,7 @@ fn test_supply_limit() {
     register_investor(&ts, &investor, &id, us_country_data());
     register_investor(&ts, &investor_b, &id_b, us_country_data());
 
-    let module = ts.env.register(SupplyLimitContract, ());
+    let module = ts.env.register(SupplyLimitContract, (&ts.admin,));
     wire_module(
         &ts,
         &module,
@@ -261,7 +261,7 @@ fn test_supply_limit_burn() {
     let id = Address::generate(&ts.env);
     register_investor(&ts, &investor, &id, us_country_data());
 
-    let module = ts.env.register(SupplyLimitContract, ());
+    let module = ts.env.register(SupplyLimitContract, (&ts.admin,));
     wire_module(
         &ts,
         &module,
@@ -306,7 +306,7 @@ fn test_time_transfer_limits() {
     register_investor(&ts, &investor_a, &id_a, us_country_data());
     register_investor(&ts, &investor_b, &id_b, us_country_data());
 
-    let module = ts.env.register(TimeTransfersLimitsContract, ());
+    let module = ts.env.register(TimeTransfersLimitsContract, (&ts.admin,));
     wire_module(&ts, &module, &[ComplianceHook::CanTransfer, ComplianceHook::Transferred]);
 
     let mod_client = TimeTransfersLimitsContractClient::new(&ts.env, &module);
@@ -346,7 +346,7 @@ fn test_transfer_restrict() {
     register_investor(&ts, &investor_a, &id_a, us_country_data());
     register_investor(&ts, &investor_b, &id_b, us_country_data());
 
-    let module = ts.env.register(TransferRestrictContract, ());
+    let module = ts.env.register(TransferRestrictContract, (&ts.admin,));
     wire_module(&ts, &module, &[ComplianceHook::CanTransfer]);
 
     let mod_client = TransferRestrictContractClient::new(&ts.env, &module);
@@ -382,7 +382,7 @@ fn test_initial_lockup() {
     register_investor(&ts, &investor, &id_inv, us_country_data());
     register_investor(&ts, &recipient, &id_rec, us_country_data());
 
-    let module = ts.env.register(InitialLockupPeriodContract, ());
+    let module = ts.env.register(InitialLockupPeriodContract, (&ts.admin,));
     wire_module(
         &ts,
         &module,
@@ -436,7 +436,7 @@ fn test_initial_lockup_partial_unlock() {
     register_investor(&ts, &investor, &id_inv, us_country_data());
     register_investor(&ts, &recipient, &id_rec, us_country_data());
 
-    let module = ts.env.register(InitialLockupPeriodContract, ());
+    let module = ts.env.register(InitialLockupPeriodContract, (&ts.admin,));
     wire_module(
         &ts,
         &module,
@@ -487,7 +487,7 @@ fn test_initial_lockup_burn() {
 
     register_investor(&ts, &investor, &id_inv, us_country_data());
 
-    let module = ts.env.register(InitialLockupPeriodContract, ());
+    let module = ts.env.register(InitialLockupPeriodContract, (&ts.admin,));
     wire_module(
         &ts,
         &module,
@@ -537,14 +537,14 @@ fn test_full_stack() {
     register_investor(&ts, &investor_de, &id_de, de_country_data());
 
     // --- Wire CountryAllowModule (allow US only) ---
-    let country_mod = ts.env.register(CountryAllowContract, ());
+    let country_mod = ts.env.register(CountryAllowContract, (&ts.admin,));
     wire_module(&ts, &country_mod, &[ComplianceHook::CanTransfer, ComplianceHook::CanCreate]);
     let country_client = CountryAllowContractClient::new(&ts.env, &country_mod);
     country_client.set_identity_registry_storage(&ts.token, &ts.irs);
     country_client.add_allowed_country(&ts.token, &840);
 
     // --- Wire MaxBalanceModule (max 1000 per identity) ---
-    let balance_mod = ts.env.register(MaxBalanceContract, ());
+    let balance_mod = ts.env.register(MaxBalanceContract, (&ts.admin,));
     wire_module(
         &ts,
         &balance_mod,
@@ -604,7 +604,7 @@ fn guard_supply_limit_without_verification() {
     let id = Address::generate(&ts.env);
     register_investor(&ts, &investor, &id, us_country_data());
 
-    let module = ts.env.register(SupplyLimitContract, ());
+    let module = ts.env.register(SupplyLimitContract, (&ts.admin,));
     wire_module(
         &ts,
         &module,
@@ -619,11 +619,11 @@ fn guard_supply_limit_without_verification() {
 }
 
 #[test]
-#[should_panic(expected = "missing required hook:")]
+#[should_panic(expected = "Error(Contract, #398)")]
 fn guard_supply_limit_missing_hook() {
     let ts = setup();
 
-    let module = ts.env.register(SupplyLimitContract, ());
+    let module = ts.env.register(SupplyLimitContract, (&ts.admin,));
     wire_module(
         &ts,
         &module,
@@ -647,7 +647,7 @@ fn guard_initial_lockup_without_verification() {
     register_investor(&ts, &investor, &id_inv, us_country_data());
     register_investor(&ts, &recipient, &id_rec, us_country_data());
 
-    let module = ts.env.register(InitialLockupPeriodContract, ());
+    let module = ts.env.register(InitialLockupPeriodContract, (&ts.admin,));
     wire_module(
         &ts,
         &module,
@@ -669,11 +669,11 @@ fn guard_initial_lockup_without_verification() {
 }
 
 #[test]
-#[should_panic(expected = "missing required hook:")]
+#[should_panic(expected = "Error(Contract, #398)")]
 fn guard_max_balance_missing_hook() {
     let ts = setup();
 
-    let module = ts.env.register(MaxBalanceContract, ());
+    let module = ts.env.register(MaxBalanceContract, (&ts.admin,));
     wire_module(
         &ts,
         &module,
@@ -698,7 +698,7 @@ fn test_initial_lockup_burn_during_lockup() {
     let id_inv = Address::generate(&ts.env);
     register_investor(&ts, &investor, &id_inv, us_country_data());
 
-    let module = ts.env.register(InitialLockupPeriodContract, ());
+    let module = ts.env.register(InitialLockupPeriodContract, (&ts.admin,));
     wire_module(
         &ts,
         &module,
@@ -735,7 +735,7 @@ fn test_time_transfer_limits_window_reset() {
     register_investor(&ts, &investor_a, &id_a, us_country_data());
     register_investor(&ts, &investor_b, &id_b, us_country_data());
 
-    let module = ts.env.register(TimeTransfersLimitsContract, ());
+    let module = ts.env.register(TimeTransfersLimitsContract, (&ts.admin,));
     wire_module(&ts, &module, &[ComplianceHook::CanTransfer, ComplianceHook::Transferred]);
 
     let mod_client = TimeTransfersLimitsContractClient::new(&ts.env, &module);
@@ -785,7 +785,7 @@ fn guard_time_transfers_without_verification() {
     register_investor(&ts, &investor_a, &id_a, us_country_data());
     register_investor(&ts, &investor_b, &id_b, us_country_data());
 
-    let module = ts.env.register(TimeTransfersLimitsContract, ());
+    let module = ts.env.register(TimeTransfersLimitsContract, (&ts.admin,));
     wire_module(&ts, &module, &[ComplianceHook::CanTransfer, ComplianceHook::Transferred]);
 
     let mod_client = TimeTransfersLimitsContractClient::new(&ts.env, &module);
@@ -798,11 +798,11 @@ fn guard_time_transfers_without_verification() {
 }
 
 #[test]
-#[should_panic(expected = "missing required hook:")]
+#[should_panic(expected = "Error(Contract, #398)")]
 fn guard_time_transfers_missing_hook() {
     let ts = setup();
 
-    let module = ts.env.register(TimeTransfersLimitsContract, ());
+    let module = ts.env.register(TimeTransfersLimitsContract, (&ts.admin,));
     wire_module(
         &ts,
         &module,
@@ -829,7 +829,7 @@ fn test_country_allow_blocks_transfer_to_non_allowed() {
     register_investor(&ts, &investor_us, &id_us, us_country_data());
     register_investor(&ts, &investor_de, &id_de, de_country_data());
 
-    let module = ts.env.register(CountryAllowContract, ());
+    let module = ts.env.register(CountryAllowContract, (&ts.admin,));
     wire_module(&ts, &module, &[ComplianceHook::CanTransfer, ComplianceHook::CanCreate]);
 
     let mod_client = CountryAllowContractClient::new(&ts.env, &module);
@@ -861,7 +861,7 @@ fn test_country_restrict_blocks_transfer_to_restricted() {
     register_investor(&ts, &investor_us, &id_us, us_country_data());
     register_investor(&ts, &investor_de, &id_de, de_country_data());
 
-    let module = ts.env.register(CountryRestrictContract, ());
+    let module = ts.env.register(CountryRestrictContract, (&ts.admin,));
     wire_module(&ts, &module, &[ComplianceHook::CanTransfer, ComplianceHook::CanCreate]);
 
     let mod_client = CountryRestrictContractClient::new(&ts.env, &module);
@@ -897,7 +897,7 @@ fn test_transfer_restrict_recipient_allowed() {
     register_investor(&ts, &investor_a, &id_a, us_country_data());
     register_investor(&ts, &investor_b, &id_b, us_country_data());
 
-    let module = ts.env.register(TransferRestrictContract, ());
+    let module = ts.env.register(TransferRestrictContract, (&ts.admin,));
     wire_module(&ts, &module, &[ComplianceHook::CanTransfer]);
 
     let mod_client = TransferRestrictContractClient::new(&ts.env, &module);
@@ -930,14 +930,14 @@ fn test_full_stack_with_burn() {
     register_investor(&ts, &investor_us, &id_us, us_country_data());
 
     // --- Wire CountryAllowModule (allow US) ---
-    let country_mod = ts.env.register(CountryAllowContract, ());
+    let country_mod = ts.env.register(CountryAllowContract, (&ts.admin,));
     wire_module(&ts, &country_mod, &[ComplianceHook::CanTransfer, ComplianceHook::CanCreate]);
     let country_client = CountryAllowContractClient::new(&ts.env, &country_mod);
     country_client.set_identity_registry_storage(&ts.token, &ts.irs);
     country_client.add_allowed_country(&ts.token, &840);
 
     // --- Wire MaxBalanceModule (max 1000) ---
-    let balance_mod = ts.env.register(MaxBalanceContract, ());
+    let balance_mod = ts.env.register(MaxBalanceContract, (&ts.admin,));
     wire_module(
         &ts,
         &balance_mod,
@@ -955,7 +955,7 @@ fn test_full_stack_with_burn() {
     balance_client.verify_hook_wiring();
 
     // --- Wire SupplyLimitModule (limit 2000) ---
-    let supply_mod = ts.env.register(SupplyLimitContract, ());
+    let supply_mod = ts.env.register(SupplyLimitContract, (&ts.admin,));
     wire_module(
         &ts,
         &supply_mod,
