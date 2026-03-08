@@ -197,8 +197,8 @@ pub trait CountryRestrict {
 
     /// Delegates to [`can_transfer`](CountryRestrict::can_transfer) — same
     /// country check applies to mints.
-    fn can_create(e: &Env, to: Address, _amount: i128, token: Address) -> bool {
-        Self::can_transfer(e, to.clone(), to, 0, token)
+    fn can_create(e: &Env, to: Address, amount: i128, token: Address) -> bool {
+        Self::can_transfer(e, to.clone(), to, amount, token)
     }
 
     /// Returns the module name for identification.
