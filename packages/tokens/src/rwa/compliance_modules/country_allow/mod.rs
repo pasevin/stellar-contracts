@@ -13,7 +13,7 @@ use storage::{is_country_allowed, remove_country_allowed, set_country_allowed};
 
 use super::common::{
     country_code, get_compliance_address, get_irs_client, module_name, require_compliance_auth,
-    set_compliance_address, set_irs_address,
+    set_irs_address,
 };
 
 /// Emitted when a country is added to the allowlist.
@@ -212,10 +212,11 @@ pub trait CountryAllow {
 
     /// Sets the compliance contract address (one-time only).
     ///
+    /// Implementers must gate this entrypoint with bootstrap-admin auth before
+    /// delegating to [`common::set_compliance_address`](super::common::set_compliance_address).
+    ///
     /// # Panics
     ///
     /// Panics if the compliance address has already been set.
-    fn set_compliance_address(e: &Env, compliance: Address) {
-        set_compliance_address(e, &compliance);
-    }
+    fn set_compliance_address(e: &Env, compliance: Address);
 }
