@@ -196,6 +196,9 @@ pub trait MaxBalance {
             "MaxBalanceModule: not armed — call verify_hook_wiring() after wiring hooks \
              [CanTransfer, CanCreate, Transferred, Created, Destroyed]"
         );
+        if amount < 0 {
+            return false;
+        }
         let irs = get_irs_client(e, &token);
         let to_id = irs.stored_identity(&to);
         can_increase_identity_balance(e, &token, &to_id, amount)

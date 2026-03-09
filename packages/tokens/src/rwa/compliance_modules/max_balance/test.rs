@@ -211,3 +211,17 @@ fn can_create_allows_without_cap_and_rejects_negative_amount() {
         ));
     });
 }
+
+#[test]
+fn can_create_rejects_negative_amount_before_requiring_irs() {
+    let e = Env::default();
+    let module_id = e.register(TestMaxBalanceContract, ());
+    let token = Address::generate(&e);
+    let recipient = Address::generate(&e);
+
+    e.as_contract(&module_id, || {
+        arm_hooks(&e);
+
+        assert!(!<TestMaxBalanceContract as MaxBalance>::can_create(&e, recipient, -1, token,));
+    });
+}
