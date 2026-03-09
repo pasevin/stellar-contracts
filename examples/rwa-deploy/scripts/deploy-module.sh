@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
-# Deploy a single compliance module, configure it, then bind + wire.
+# Deploy a single compliance module, apply shared pre-bind setup, then bind + wire.
 # Usage: ./deploy-module.sh <module-name> [hook1 hook2 ...]
 # Example: ./deploy-module.sh country-allow CanTransfer CanCreate
 #
 # This script handles the correct ordering:
 #   1. Deploy the module with bootstrap admin
-#   2. Configure (IRS, defaults) — while admin is still active
+#   2. Apply shared pre-bind setup (IRS on identity-aware modules only)
 #   3. Set compliance address (hands off to compliance)
 #   4. Register on hooks (optional)
+#
+# This helper intentionally does not apply module-specific business config
+# (allowlists, limits, lockup periods, etc.). Use `deploy.sh` for the full
+# stack configuration flow.
 #
 # Prerequisites: deploy.sh must have been run (needs addresses file for infra).
 set -euo pipefail
@@ -91,5 +95,5 @@ for HOOK in "${HOOKS[@]}"; do
 done
 
 echo ""
-echo "=== $MODULE deployed and configured ==="
+echo "=== $MODULE deployed and bound ==="
 echo "Address: $MODULE_ADDR"

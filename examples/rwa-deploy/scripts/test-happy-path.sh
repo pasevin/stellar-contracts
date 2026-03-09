@@ -17,26 +17,45 @@ ADDR_FILE="$ROOT_DIR/examples/rwa-deploy/testnet-addresses.json"
 SOURCE="${STELLAR_SOURCE:-alice}"
 NETWORK="${STELLAR_NETWORK:-testnet}"
 
+. "$SCRIPT_DIR/common.sh"
+
 if [ ! -f "$ADDR_FILE" ]; then
   echo "ERROR: testnet-addresses.json not found. Run deploy.sh first." >&2
   exit 1
 fi
-
-read_addr() {
-  python3 -c "import json; d=json.load(open('$ADDR_FILE')); print(d$1)"
-}
-
-invoke() {
-  stellar contract invoke --id "$1" \
-    --source "$SOURCE" --network "$NETWORK" \
-    -- "${@:2}"
-}
 
 ADMIN=$(read_addr "['admin']")
 TOKEN=$(read_addr "['contracts']['token']")
 IRS=$(read_addr "['contracts']['irs']")
 
 INVESTOR="$ADMIN"
+
+invoke_with_retry() {
+  local attempts=${STELLAR_INVOKE_RETRIES:-4}
+  local delay=${STELLAR_INVOKE_RETRY_DELAY_SECONDS:-3}
+  local attempt output status
+
+  for attempt in $(seq 1 "$attempts"); do
+    if output=$(invoke "$@" 2>&1); then
+      printf '%s\n' "$output"
+      return 0
+    fi
+    status=$?
+
+    if ! retryable_invoke_error "$output"; then
+      printf '%s\n' "$output" >&2
+      return "$status"
+    fi
+
+    if [ "$attempt" -eq "$attempts" ]; then
+      printf '%s\n' "$output" >&2
+      return "$status"
+    fi
+
+    echo "  Retrying after transient Stellar CLI failure..." >&2
+    sleep $((delay * attempt))
+  done
+}
 
 echo "=== Happy Path Test ==="
 echo "Token:    $TOKEN"
@@ -45,21 +64,21 @@ echo ""
 
 # Step 1: Register investor identity in IRS (IRS uses its own admin auth, not compliance)
 echo "1. Registering investor identity..."
-invoke "$IRS" add_identity \
-  --account "$INVESTOR" \
-  --identity "$INVESTOR" \
-  --initial_profiles '[{"country":{"Individual":{"Citizenship":840}},"metadata":null}]' \
-  --operator "$ADMIN" 2>&1 || echo "  (already registered)"
+ensure_identity_registered \
+  "$IRS" \
+  "$INVESTOR" \
+  "$INVESTOR" \
+  '[{"country":{"Individual":{"Citizenship":840}},"metadata":null}]'
 
 # Step 2: Mint tokens (this triggers compliance hooks: CanCreate -> Created)
 echo ""
 echo "2. Minting 1000 tokens to investor..."
-invoke "$TOKEN" mint --to "$INVESTOR" --amount 1000 --operator "$ADMIN"
+invoke_with_retry "$TOKEN" mint --to "$INVESTOR" --amount 1000 --operator "$ADMIN"
 
 # Step 3: Check balance
 echo ""
 echo "3. Checking balance..."
-BALANCE_OUTPUT=$(invoke "$TOKEN" balance --account "$INVESTOR" 2>&1)
+BALANCE_OUTPUT=$(invoke_readonly "$TOKEN" balance --account "$INVESTOR" 2>&1)
 BALANCE=$(echo "$BALANCE_OUTPUT" | grep -oE '[0-9]+' | head -1)
 
 echo ""
