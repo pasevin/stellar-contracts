@@ -10,8 +10,7 @@ use stellar_tokens::rwa::{
         },
         supply_limit::{
             storage::{
-                get_internal_supply, get_supply_limit_or_panic, set_internal_supply,
-                set_supply_limit,
+                get_internal_supply, get_supply_limit, set_internal_supply, set_supply_limit,
             },
             SupplyLimit, SupplyLimitSet,
         },
@@ -60,7 +59,7 @@ impl SupplyLimit for SupplyLimitContract {
     }
 
     fn get_supply_limit(e: &Env, token: Address) -> i128 {
-        get_supply_limit_or_panic(e, &token)
+        get_supply_limit(e, &token)
     }
 
     fn get_internal_supply(e: &Env, token: Address) -> i128 {

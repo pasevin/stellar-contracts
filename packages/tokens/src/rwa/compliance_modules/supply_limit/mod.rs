@@ -6,12 +6,11 @@
 //! [trex-src]: https://github.com/TokenySolutions/T-REX/blob/main/contracts/compliance/modular/modules/SupplyLimitModule.sol
 
 pub mod storage;
+#[cfg(test)]
+mod test;
 
 use soroban_sdk::{contractevent, contracttrait, vec, Address, Env, String, Vec};
-use storage::{
-    get_internal_supply, get_supply_limit, get_supply_limit_or_panic, set_internal_supply,
-    set_supply_limit,
-};
+use storage::{get_internal_supply, get_supply_limit, set_internal_supply, set_supply_limit};
 
 use super::common::{
     checked_add_i128, checked_sub_i128, get_compliance_address, hooks_verified, module_name,
@@ -38,7 +37,7 @@ pub trait SupplyLimit {
     }
 
     fn get_supply_limit(e: &Env, token: Address) -> i128 {
-        get_supply_limit_or_panic(e, &token)
+        get_supply_limit(e, &token)
     }
 
     fn get_internal_supply(e: &Env, token: Address) -> i128 {

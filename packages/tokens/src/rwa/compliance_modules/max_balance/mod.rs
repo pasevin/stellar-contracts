@@ -7,6 +7,8 @@
 //! [trex-src]: https://github.com/TokenySolutions/T-REX/blob/main/contracts/compliance/modular/modules/MaxBalanceModule.sol
 
 pub mod storage;
+#[cfg(test)]
+mod test;
 
 use soroban_sdk::{contractevent, contracttrait, vec, Address, Env, String, Vec};
 use storage::{get_id_balance, get_max_balance, set_id_balance, set_max_balance};
@@ -35,6 +37,25 @@ pub struct IDBalancePreSet {
     pub token: Address,
     pub identity: Address,
     pub balance: i128,
+}
+
+fn can_increase_identity_balance(
+    e: &Env,
+    token: &Address,
+    identity: &Address,
+    amount: i128,
+) -> bool {
+    if amount < 0 {
+        return false;
+    }
+
+    let max = get_max_balance(e, token);
+    if max == 0 {
+        return true;
+    }
+
+    let current = get_id_balance(e, token, identity);
+    checked_add_i128(e, current, amount) <= max
 }
 
 #[contracttrait]
@@ -110,15 +131,13 @@ pub trait MaxBalance {
         }
 
         let from_balance = get_id_balance(e, &token, &from_id);
-        let to_balance = get_id_balance(e, &token, &to_id);
-        let new_to_balance = checked_add_i128(e, to_balance, amount);
-
-        let max = get_max_balance(e, &token);
         assert!(
-            max == 0 || new_to_balance <= max,
+            can_increase_identity_balance(e, &token, &to_id, amount),
             "MaxBalanceModule: recipient identity balance exceeds max"
         );
 
+        let to_balance = get_id_balance(e, &token, &to_id);
+        let new_to_balance = checked_add_i128(e, to_balance, amount);
         set_id_balance(e, &token, &from_id, checked_sub_i128(e, from_balance, amount));
         set_id_balance(e, &token, &to_id, new_to_balance);
     }
@@ -130,15 +149,13 @@ pub trait MaxBalance {
         let irs = get_irs_client(e, &token);
         let to_id = irs.stored_identity(&to);
 
-        let current = get_id_balance(e, &token, &to_id);
-        let new_balance = checked_add_i128(e, current, amount);
-
-        let max = get_max_balance(e, &token);
         assert!(
-            max == 0 || new_balance <= max,
+            can_increase_identity_balance(e, &token, &to_id, amount),
             "MaxBalanceModule: recipient identity balance exceeds max after mint"
         );
 
+        let current = get_id_balance(e, &token, &to_id);
+        let new_balance = checked_add_i128(e, current, amount);
         set_id_balance(e, &token, &to_id, new_balance);
     }
 
@@ -162,11 +179,6 @@ pub trait MaxBalance {
         if amount < 0 {
             return false;
         }
-        let max = get_max_balance(e, &token);
-        if max == 0 || amount > max {
-            return max == 0;
-        }
-
         let irs = get_irs_client(e, &token);
         let from_id = irs.stored_identity(&from);
         let to_id = irs.stored_identity(&to);
@@ -175,12 +187,18 @@ pub trait MaxBalance {
             return true;
         }
 
-        let to_balance = get_id_balance(e, &token, &to_id);
-        checked_add_i128(e, to_balance, amount) <= max
+        can_increase_identity_balance(e, &token, &to_id, amount)
     }
 
     fn can_create(e: &Env, to: Address, amount: i128, token: Address) -> bool {
-        Self::can_transfer(e, to.clone(), to, amount, token)
+        assert!(
+            hooks_verified(e),
+            "MaxBalanceModule: not armed — call verify_hook_wiring() after wiring hooks \
+             [CanTransfer, CanCreate, Transferred, Created, Destroyed]"
+        );
+        let irs = get_irs_client(e, &token);
+        let to_id = irs.stored_identity(&to);
+        can_increase_identity_balance(e, &token, &to_id, amount)
     }
 
     fn name(e: &Env) -> String {
