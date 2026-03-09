@@ -31,6 +31,7 @@ use crate::{
 struct TestSetup<'a> {
     env: Env,
     admin: Address,
+    manager: Address,
     token: Address,
     token_client: RWATokenContractClient<'a>,
     compliance: Address,
@@ -54,12 +55,12 @@ fn de_country_data() -> CountryData {
     }
 }
 
-fn setup<'a>() -> TestSetup<'a> {
+fn setup() -> TestSetup<'static> {
     let env = Env::default();
     env.mock_all_auths();
 
     let admin = Address::generate(&env);
-    let manager = admin.clone();
+    let manager = Address::generate(&env);
 
     let irs = env.register(IdentityRegistryContract, (&admin, &manager));
     let irs_client = IdentityRegistryContractClient::new(&env, &irs);
@@ -80,6 +81,7 @@ fn setup<'a>() -> TestSetup<'a> {
     TestSetup {
         env,
         admin,
+        manager,
         token,
         token_client,
         compliance,
@@ -91,7 +93,8 @@ fn setup<'a>() -> TestSetup<'a> {
 }
 
 fn register_investor(ts: &TestSetup, investor: &Address, identity: &Address, country: CountryData) {
-    ts.irs_client.add_identity(investor, identity, &vec![&ts.env, country], &ts.admin);
+    ts.irs_client
+        .add_identity(investor, identity, &vec![&ts.env, country], &ts.manager);
 }
 
 fn wire_module(ts: &TestSetup, module_addr: &Address, hooks: &[ComplianceHook]) {
