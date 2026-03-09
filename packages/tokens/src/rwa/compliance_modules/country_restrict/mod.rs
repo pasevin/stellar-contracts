@@ -214,7 +214,9 @@ pub trait CountryRestrict {
     /// Sets the compliance contract address (one-time only).
     ///
     /// Implementers must gate this entrypoint with bootstrap-admin auth before
-    /// delegating to [`common::set_compliance_address`](super::common::set_compliance_address).
+    /// delegating to
+    /// [`common::set_compliance_address`](super::common::set_compliance_address).
+    ///
     ///
     /// # Panics
     ///
