@@ -34,10 +34,12 @@ echo "=== Building ${#ALL[@]} WASMs ==="
 cd "$ROOT_DIR"
 for pkg in "${ALL[@]}"; do
   echo "  Building $pkg..."
-  if ! stellar contract build --package "$pkg" --out-dir "$WASM_DIR" 2>&1 | grep -v "^$"; then
+  if ! output=$(stellar contract build --package "$pkg" --out-dir "$WASM_DIR" 2>&1); then
+    printf '%s\n' "$output" | sed '/^$/d'
     echo "ERROR: Failed to build $pkg" >&2
     exit 1
   fi
+  printf '%s\n' "$output" | sed '/^$/d'
 done
 
 echo ""

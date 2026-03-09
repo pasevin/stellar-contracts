@@ -258,7 +258,7 @@ run_lockup_tests() {
   # All 1000 tokens are locked so burn should be rejected.
   test_header "Test 4: Lockup blocks burn of locked tokens"
   assert_fail "burn 500 during lockup" invoke "$TOKEN" burn \
-    --from "$INVESTOR" --amount 500 --operator "$ADMIN"
+    --user_address "$INVESTOR" --amount 500 --operator "$ADMIN"
 
   BAL=$(get_balance "$INVESTOR")
   assert_eq "balance unchanged = 1000" "1000" "$BAL"
