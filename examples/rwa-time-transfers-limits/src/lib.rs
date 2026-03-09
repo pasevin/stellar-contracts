@@ -149,6 +149,35 @@ impl TimeTransfersLimits for TimeTransfersLimitsContract {
         }
     }
 
+    fn pre_set_transfer_counter(
+        e: &Env,
+        token: Address,
+        identity: Address,
+        limit_time: u64,
+        counter: TransferCounter,
+    ) {
+        require_module_admin_or_compliance_auth(e);
+        stellar_tokens::rwa::compliance_modules::common::require_non_negative_amount(
+            e,
+            counter.value,
+        );
+        assert!(limit_time > 0, "limit_time must be greater than zero");
+
+        let mut found = false;
+        for limit in get_limits(e, &token).iter() {
+            if limit.limit_time == limit_time {
+                found = true;
+                break;
+            }
+        }
+
+        if !found {
+            panic_with_error!(e, ComplianceModuleError::MissingLimit);
+        }
+
+        set_counter(e, &token, &identity, limit_time, &counter);
+    }
+
     fn required_hooks(e: &Env) -> Vec<ComplianceHook> {
         vec![e, ComplianceHook::CanTransfer, ComplianceHook::Transferred]
     }

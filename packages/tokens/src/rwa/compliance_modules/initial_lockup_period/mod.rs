@@ -8,6 +8,8 @@
 //! [trex-src]: https://github.com/TokenySolutions/T-REX/blob/main/contracts/compliance/modular/modules/TimeExchangeLimitsModule.sol
 
 pub mod storage;
+#[cfg(test)]
+mod test;
 
 use soroban_sdk::{contractevent, contracttrait, vec, Address, Env, String, Vec};
 pub use storage::LockedTokens;
@@ -45,6 +47,16 @@ fn calculate_unlocked_amount(e: &Env, locks: &Vec<LockedTokens>) -> i128 {
         }
     }
     unlocked
+}
+
+fn calculate_total_locked_amount(e: &Env, locks: &Vec<LockedTokens>) -> i128 {
+    let mut total = 0i128;
+    for i in 0..locks.len() {
+        let lock = locks.get(i).unwrap();
+        require_non_negative_amount(e, lock.amount);
+        total = checked_add_i128(e, total, lock.amount);
+    }
+    total
 }
 
 fn update_locked_tokens(e: &Env, token: &Address, wallet: &Address, mut amount_to_consume: i128) {
@@ -104,6 +116,27 @@ pub trait InitialLockupPeriod {
 
     fn get_internal_balance(e: &Env, token: Address, wallet: Address) -> i128 {
         get_internal_balance(e, &token, &wallet)
+    }
+
+    fn pre_set_lockup_state(
+        e: &Env,
+        token: Address,
+        wallet: Address,
+        balance: i128,
+        locks: Vec<LockedTokens>,
+    ) {
+        require_compliance_auth(e);
+        require_non_negative_amount(e, balance);
+
+        let total_locked = calculate_total_locked_amount(e, &locks);
+        assert!(
+            total_locked <= balance,
+            "InitialLockupPeriodModule: total locked amount cannot exceed balance"
+        );
+
+        set_internal_balance(e, &token, &wallet, balance);
+        set_locks(e, &token, &wallet, &locks);
+        set_total_locked(e, &token, &wallet, total_locked);
     }
 
     fn required_hooks(e: &Env) -> Vec<ComplianceHook> {

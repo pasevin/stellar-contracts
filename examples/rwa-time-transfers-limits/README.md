@@ -53,6 +53,8 @@ Compliance.
 - `batch_set_time_transfer_limit(token, limits)` updates multiple windows
 - `remove_time_transfer_limit(token, limit_time)` removes a window
 - `batch_remove_time_transfer_limit(token, limit_times)` removes many windows
+- `pre_set_transfer_counter(token, identity, limit_time, counter)` seeds an
+  in-flight rolling window when attaching the module after recent transfers
 - `required_hooks()` returns the required hook set
 - `verify_hook_wiring()` marks the module as armed after registration
 - `set_compliance_address(compliance)` performs the one-time handoff to the
@@ -63,4 +65,7 @@ Compliance.
 - Storage is token-scoped, so one deployed module can be reused across many
   tokens
 - Counter resets are driven by ledger timestamps
+- If the module is attached after transfers have already occurred inside an
+  active window, seed the relevant identity counters before relying on
+  `can_transfer`
 - Only outgoing transfer volume is tracked; mint and burn hooks are not used

@@ -46,6 +46,8 @@ Compliance.
 
 - `__constructor(admin)` initializes the bootstrap admin
 - `set_lockup_period(token, lockup_seconds)` configures the mint lockup window
+- `pre_set_lockup_state(token, wallet, balance, locks)` seeds an existing
+  holder's mirrored balance and active lock entries
 - `required_hooks()` returns the required hook set
 - `verify_hook_wiring()` marks the module as armed after registration
 - `set_compliance_address(compliance)` performs the one-time handoff to the
@@ -56,5 +58,7 @@ Compliance.
 - Storage is token-scoped, so one deployed module can be reused across many
   tokens
 - The module stores detailed lock entries plus aggregate locked totals
+- If the module is attached after live minting, seed existing balances and any
+  still-active lock entries before relying on transfer or burn enforcement
 - Transfer and burn flows consume unlocked balance first, then matured locks if
   needed
