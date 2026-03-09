@@ -7,6 +7,8 @@
 //! [trex-src]: https://github.com/TokenySolutions/T-REX/blob/main/contracts/compliance/modular/modules/TransferRestrictModule.sol
 
 pub mod storage;
+#[cfg(test)]
+mod test;
 
 use soroban_sdk::{contractevent, contracttrait, Address, Env, String, Vec};
 use storage::{is_user_allowed, remove_user_allowed, set_user_allowed};

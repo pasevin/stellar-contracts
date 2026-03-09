@@ -104,7 +104,7 @@ impl TimeTransfersLimits for TimeTransfersLimitsContract {
 
         if !replaced {
             if limits.len() >= MAX_LIMITS_PER_TOKEN {
-                panic_with_error!(e, ComplianceModuleError::MathOverflow);
+                panic_with_error!(e, ComplianceModuleError::TooManyLimits);
             }
             limits.push_back(limit.clone());
         }

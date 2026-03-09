@@ -65,12 +65,12 @@ fn update_locked_tokens(e: &Env, token: &Address, wallet: &Address, mut amount_t
         let lock = locks.get(i).unwrap();
         if amount_to_consume > 0 && lock.release_timestamp <= now {
             if amount_to_consume >= lock.amount {
-                amount_to_consume -= lock.amount;
-                consumed_total += lock.amount;
+                amount_to_consume = checked_sub_i128(e, amount_to_consume, lock.amount);
+                consumed_total = checked_add_i128(e, consumed_total, lock.amount);
             } else {
-                consumed_total += amount_to_consume;
+                consumed_total = checked_add_i128(e, consumed_total, amount_to_consume);
                 new_locks.push_back(LockedTokens {
-                    amount: lock.amount - amount_to_consume,
+                    amount: checked_sub_i128(e, lock.amount, amount_to_consume),
                     release_timestamp: lock.release_timestamp,
                 });
                 amount_to_consume = 0;
