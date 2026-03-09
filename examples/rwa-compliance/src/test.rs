@@ -20,7 +20,7 @@ use stellar_tokens::rwa::{
 use crate::{
     compliance::{ComplianceContract, ComplianceContractClient},
     identity_registry::{IdentityRegistryContract, IdentityRegistryContractClient},
-    identity_verifier::SimpleIdentityVerifier,
+    identity_verifier::{SimpleIdentityVerifier, SimpleIdentityVerifierClient},
     token::{RWATokenContract, RWATokenContractClient},
 };
 
@@ -37,6 +37,7 @@ struct TestSetup<'a> {
     compliance_client: ComplianceContractClient<'a>,
     irs: Address,
     irs_client: IdentityRegistryContractClient<'a>,
+    verifier: Address,
 }
 
 fn us_country_data() -> CountryData {
@@ -63,7 +64,7 @@ fn setup<'a>() -> TestSetup<'a> {
     let irs = env.register(IdentityRegistryContract, (&admin, &manager));
     let irs_client = IdentityRegistryContractClient::new(&env, &irs);
 
-    let verifier = env.register(SimpleIdentityVerifier, (&irs,));
+    let verifier = env.register(SimpleIdentityVerifier, (&admin, &irs));
 
     let compliance = env.register(ComplianceContract, (&admin,));
     let compliance_client = ComplianceContractClient::new(&env, &compliance);
@@ -76,7 +77,17 @@ fn setup<'a>() -> TestSetup<'a> {
     compliance_client.bind_token(&token, &admin);
     irs_client.bind_tokens(&vec![&env, token.clone()], &manager);
 
-    TestSetup { env, admin, token, token_client, compliance, compliance_client, irs, irs_client }
+    TestSetup {
+        env,
+        admin,
+        token,
+        token_client,
+        compliance,
+        compliance_client,
+        irs,
+        irs_client,
+        verifier,
+    }
 }
 
 fn register_investor(ts: &TestSetup, investor: &Address, identity: &Address, country: CountryData) {
@@ -985,4 +996,34 @@ fn test_full_stack_with_burn() {
     // 4) Mint 1 more — exceeds max balance
     let result = ts.token_client.try_mint(&investor_us, &1, &ts.admin);
     assert!(result.is_err());
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #304)")]
+fn identity_verifier_maps_missing_identity_to_rwa_error() {
+    let ts = setup();
+    let verifier_client = SimpleIdentityVerifierClient::new(&ts.env, &ts.verifier);
+    let unknown_account = Address::generate(&ts.env);
+
+    verifier_client.verify_identity(&unknown_account);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #310)")]
+fn identity_verifier_claim_topics_getter_uses_contract_error() {
+    let ts = setup();
+    let verifier_client = SimpleIdentityVerifierClient::new(&ts.env, &ts.verifier);
+
+    verifier_client.claim_topics_and_issuers();
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #2000)")]
+fn identity_verifier_claim_topics_setter_requires_admin_role() {
+    let ts = setup();
+    let verifier_client = SimpleIdentityVerifierClient::new(&ts.env, &ts.verifier);
+    let claim_topics_and_issuers = Address::generate(&ts.env);
+    let unauthorized_operator = Address::generate(&ts.env);
+
+    verifier_client.set_claim_topics_and_issuers(&claim_topics_and_issuers, &unauthorized_operator);
 }
