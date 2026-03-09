@@ -93,8 +93,7 @@ fn setup() -> TestSetup<'static> {
 }
 
 fn register_investor(ts: &TestSetup, investor: &Address, identity: &Address, country: CountryData) {
-    ts.irs_client
-        .add_identity(investor, identity, &vec![&ts.env, country], &ts.manager);
+    ts.irs_client.add_identity(investor, identity, &vec![&ts.env, country], &ts.manager);
 }
 
 fn wire_module(ts: &TestSetup, module_addr: &Address, hooks: &[ComplianceHook]) {
