@@ -161,3 +161,39 @@ fn hooks_update_internal_supply_and_cap_future_mints() {
         ));
     });
 }
+
+#[test]
+fn pre_set_internal_supply_seeds_existing_supply_for_cap_checks() {
+    let e = Env::default();
+    e.mock_all_auths();
+
+    let module_id = e.register(TestSupplyLimitContract, ());
+    let compliance_id = e.register(MockComplianceContract, ());
+    let token = Address::generate(&e);
+    let recipient = Address::generate(&e);
+
+    e.as_contract(&module_id, || {
+        set_compliance_address(&e, &compliance_id);
+        arm_hooks(&e);
+
+        <TestSupplyLimitContract as SupplyLimit>::set_supply_limit(&e, token.clone(), 100);
+        <TestSupplyLimitContract as SupplyLimit>::pre_set_internal_supply(&e, token.clone(), 90);
+
+        assert_eq!(
+            <TestSupplyLimitContract as SupplyLimit>::get_internal_supply(&e, token.clone()),
+            90
+        );
+        assert!(!<TestSupplyLimitContract as SupplyLimit>::can_create(
+            &e,
+            recipient.clone(),
+            11,
+            token.clone(),
+        ));
+        assert!(<TestSupplyLimitContract as SupplyLimit>::can_create(
+            &e,
+            recipient,
+            10,
+            token.clone(),
+        ));
+    });
+}

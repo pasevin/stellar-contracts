@@ -36,6 +36,12 @@ pub trait SupplyLimit {
         SupplyLimitSet { token, limit }.publish(e);
     }
 
+    fn pre_set_internal_supply(e: &Env, token: Address, supply: i128) {
+        require_compliance_auth(e);
+        require_non_negative_amount(e, supply);
+        set_internal_supply(e, &token, supply);
+    }
+
     fn get_supply_limit(e: &Env, token: Address) -> i128 {
         get_supply_limit(e, &token)
     }

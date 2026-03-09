@@ -58,6 +58,12 @@ impl SupplyLimit for SupplyLimitContract {
         SupplyLimitSet { token, limit }.publish(e);
     }
 
+    fn pre_set_internal_supply(e: &Env, token: Address, supply: i128) {
+        require_module_admin_or_compliance_auth(e);
+        stellar_tokens::rwa::compliance_modules::common::require_non_negative_amount(e, supply);
+        set_internal_supply(e, &token, supply);
+    }
+
     fn get_supply_limit(e: &Env, token: Address) -> i128 {
         get_supply_limit(e, &token)
     }

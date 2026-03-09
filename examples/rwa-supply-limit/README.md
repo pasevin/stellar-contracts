@@ -41,6 +41,8 @@ Compliance.
 
 - `__constructor(admin)` initializes the bootstrap admin
 - `set_supply_limit(token, limit)` sets the per-token cap
+- `pre_set_internal_supply(token, supply)` seeds tracked supply when wiring the
+  module after historical minting
 - `get_supply_limit(token)` reads the configured cap
 - `get_internal_supply(token)` reads the tracked internal supply
 - `required_hooks()` returns the required hook set
@@ -53,5 +55,7 @@ Compliance.
 - Storage is token-scoped, so one deployed module can be reused across many
   tokens
 - A configured limit of `0` behaves as "no cap"
+- If the module is attached after a token already has minted supply, seed the
+  existing amount with `pre_set_internal_supply` before relying on `can_create`
 - The internal supply is updated only through the registered `Created` and
   `Destroyed` hooks
