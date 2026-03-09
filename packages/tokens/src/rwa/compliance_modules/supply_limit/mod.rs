@@ -105,6 +105,8 @@ pub trait SupplyLimit {
     }
 
     /// Implementers must gate this entrypoint with bootstrap-admin auth before
-    /// delegating to [`common::set_compliance_address`](super::common::set_compliance_address).
+    /// delegating to
+    /// [`common::set_compliance_address`](super::common::set_compliance_address).
+    ///
     fn set_compliance_address(e: &Env, compliance: Address);
 }
