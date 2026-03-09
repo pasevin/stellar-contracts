@@ -222,3 +222,158 @@ pub trait CountryAllow {
     /// Panics if the compliance address has already been set.
     fn set_compliance_address(e: &Env, compliance: Address);
 }
+
+#[cfg(test)]
+mod test {
+    extern crate std;
+
+    use soroban_sdk::{
+        contract, contractimpl, contracttype, testutils::Address as _, vec, Address, Env, Vec,
+    };
+
+    use super::*;
+    use crate::rwa::{
+        compliance_modules::common::IRSRead,
+        identity_registry_storage::{
+            CountryData, CountryRelation, IndividualCountryRelation, OrganizationCountryRelation,
+        },
+    };
+
+    #[contract]
+    struct MockIRSContract;
+
+    #[contracttype]
+    #[derive(Clone)]
+    enum MockIRSStorageKey {
+        CountryEntries(Address),
+    }
+
+    #[contractimpl]
+    impl IRSRead for MockIRSContract {
+        fn stored_identity(_e: &Env, account: Address) -> Address {
+            account
+        }
+
+        fn get_country_data_entries(e: &Env, account: Address) -> Vec<CountryData> {
+            e.storage()
+                .persistent()
+                .get(&MockIRSStorageKey::CountryEntries(account))
+                .unwrap_or_else(|| Vec::new(e))
+        }
+    }
+
+    #[contractimpl]
+    impl MockIRSContract {
+        pub fn set_country_data_entries(e: &Env, account: Address, entries: Vec<CountryData>) {
+            e.storage().persistent().set(&MockIRSStorageKey::CountryEntries(account), &entries);
+        }
+    }
+
+    #[contract]
+    struct TestCountryAllowContract;
+
+    #[contractimpl(contracttrait)]
+    impl CountryAllow for TestCountryAllowContract {
+        fn set_compliance_address(_e: &Env, _compliance: Address) {
+            unreachable!("set_compliance_address is not used in these tests");
+        }
+    }
+
+    fn individual_country(code: u32) -> CountryData {
+        CountryData {
+            country: CountryRelation::Individual(IndividualCountryRelation::Residence(code)),
+            metadata: None,
+        }
+    }
+
+    fn organization_country(code: u32) -> CountryData {
+        CountryData {
+            country: CountryRelation::Organization(
+                OrganizationCountryRelation::OperatingJurisdiction(code),
+            ),
+            metadata: None,
+        }
+    }
+
+    #[test]
+    fn can_transfer_and_create_allow_when_any_country_matches() {
+        let e = Env::default();
+        let module_id = e.register(TestCountryAllowContract, ());
+        let irs_id = e.register(MockIRSContract, ());
+        let irs = MockIRSContractClient::new(&e, &irs_id);
+        let token = Address::generate(&e);
+        let from = Address::generate(&e);
+        let to = Address::generate(&e);
+
+        irs.set_country_data_entries(
+            &to,
+            &vec![&e, individual_country(250), organization_country(276)],
+        );
+
+        e.as_contract(&module_id, || {
+            set_irs_address(&e, &token, &irs_id);
+            set_country_allowed(&e, &token, 276);
+
+            assert!(<TestCountryAllowContract as CountryAllow>::can_transfer(
+                &e,
+                from.clone(),
+                to.clone(),
+                100,
+                token.clone(),
+            ));
+            assert!(<TestCountryAllowContract as CountryAllow>::can_create(
+                &e,
+                to.clone(),
+                100,
+                token.clone(),
+            ));
+        });
+    }
+
+    #[test]
+    fn can_transfer_and_create_reject_when_no_country_matches() {
+        let e = Env::default();
+        let module_id = e.register(TestCountryAllowContract, ());
+        let irs_id = e.register(MockIRSContract, ());
+        let irs = MockIRSContractClient::new(&e, &irs_id);
+        let token = Address::generate(&e);
+        let from = Address::generate(&e);
+        let empty_to = Address::generate(&e);
+        let disallowed_to = Address::generate(&e);
+
+        irs.set_country_data_entries(&disallowed_to, &vec![&e, individual_country(250)]);
+
+        e.as_contract(&module_id, || {
+            set_irs_address(&e, &token, &irs_id);
+            set_country_allowed(&e, &token, 276);
+
+            assert!(!<TestCountryAllowContract as CountryAllow>::can_transfer(
+                &e,
+                from.clone(),
+                empty_to.clone(),
+                100,
+                token.clone(),
+            ));
+            assert!(!<TestCountryAllowContract as CountryAllow>::can_create(
+                &e,
+                empty_to,
+                100,
+                token.clone(),
+            ));
+
+            assert!(!<TestCountryAllowContract as CountryAllow>::can_transfer(
+                &e,
+                from.clone(),
+                disallowed_to.clone(),
+                100,
+                token.clone(),
+            ));
+            assert!(!<TestCountryAllowContract as CountryAllow>::can_create(
+                &e,
+                disallowed_to,
+                100,
+                token.clone(),
+            ));
+        });
+    }
+}
