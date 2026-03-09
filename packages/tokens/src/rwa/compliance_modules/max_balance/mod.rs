@@ -13,8 +13,8 @@ use storage::{get_id_balance, get_max_balance, set_id_balance, set_max_balance};
 
 use super::common::{
     checked_add_i128, checked_sub_i128, get_compliance_address, get_irs_client, hooks_verified,
-    module_name, require_compliance_auth, require_non_negative_amount, set_compliance_address,
-    set_irs_address, verify_required_hooks,
+    module_name, require_compliance_auth, require_non_negative_amount, set_irs_address,
+    verify_required_hooks,
 };
 use crate::rwa::compliance::ComplianceHook;
 
@@ -191,7 +191,7 @@ pub trait MaxBalance {
         get_compliance_address(e)
     }
 
-    fn set_compliance_address(e: &Env, compliance: Address) {
-        set_compliance_address(e, &compliance);
-    }
+    /// Implementers must gate this entrypoint with bootstrap-admin auth before
+    /// delegating to [`common::set_compliance_address`](super::common::set_compliance_address).
+    fn set_compliance_address(e: &Env, compliance: Address);
 }
