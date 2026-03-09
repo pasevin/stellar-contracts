@@ -11,9 +11,7 @@ pub mod storage;
 use soroban_sdk::{contractevent, contracttrait, Address, Env, String, Vec};
 use storage::{is_user_allowed, remove_user_allowed, set_user_allowed};
 
-use super::common::{
-    get_compliance_address, module_name, require_compliance_auth, set_compliance_address,
-};
+use super::common::{get_compliance_address, module_name, require_compliance_auth};
 
 /// Emitted when an address is added to the transfer allowlist.
 #[contractevent]
@@ -188,10 +186,11 @@ pub trait TransferRestrict {
 
     /// Sets the compliance contract address (one-time only).
     ///
+    /// Implementers must gate this entrypoint with bootstrap-admin auth before
+    /// delegating to [`common::set_compliance_address`](super::common::set_compliance_address).
+    ///
     /// # Panics
     ///
     /// Panics if the compliance address has already been set.
-    fn set_compliance_address(e: &Env, compliance: Address) {
-        set_compliance_address(e, &compliance);
-    }
+    fn set_compliance_address(e: &Env, compliance: Address);
 }
