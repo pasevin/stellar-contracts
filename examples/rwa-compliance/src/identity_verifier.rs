@@ -5,8 +5,7 @@
 //! demonstrating the compliance module stack without the full claims pipeline.
 
 use soroban_sdk::{
-    contract, contractimpl, contracttype, panic_with_error, symbol_short, Address, Env, Symbol,
-    Vec,
+    contract, contractimpl, contracttype, panic_with_error, symbol_short, Address, Env, Symbol, Vec,
 };
 use stellar_access::access_control::{self as access_control, AccessControl};
 use stellar_macros::only_role;
