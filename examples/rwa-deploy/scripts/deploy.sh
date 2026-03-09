@@ -93,7 +93,7 @@ IRS=$(deploy_contract "IRS" \
 VERIFIER=$(deploy_contract "Verifier" \
   --wasm "$WASM_DIR/deploy_verifier.wasm" \
   --source "$SOURCE" --network "$NETWORK" \
-  -- --irs "$IRS")
+  -- --admin "$ADMIN" --irs "$IRS")
 
 COMPLIANCE=$(deploy_contract "Compliance" \
   --wasm "$WASM_DIR/deploy_compliance.wasm" \
