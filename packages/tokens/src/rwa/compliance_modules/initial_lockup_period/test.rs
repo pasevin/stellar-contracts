@@ -1,9 +1,14 @@
 extern crate std;
 
-use soroban_sdk::{contract, contractimpl, testutils::Address as _, vec, Address, Env, Symbol};
+use soroban_sdk::{
+    contract, contractimpl, contracttype, testutils::Address as _, vec, Address, Env, Symbol,
+};
 
 use super::*;
-use crate::rwa::compliance_modules::common::set_compliance_address;
+use crate::rwa::{
+    compliance::ComplianceHook,
+    compliance_modules::common::{hooks_verified, set_compliance_address, ComplianceHookCheck},
+};
 
 #[contract]
 struct TestInitialLockupPeriodContract;
@@ -17,6 +22,54 @@ impl InitialLockupPeriod for TestInitialLockupPeriodContract {
 
 fn arm_hooks(e: &Env) {
     e.storage().persistent().set(&Symbol::new(e, "hooks_verified"), &true);
+}
+
+#[contract]
+struct MockComplianceContract;
+
+#[derive(Clone)]
+#[contracttype]
+enum MockComplianceStorageKey {
+    Registered(ComplianceHook, Address),
+}
+
+#[contractimpl]
+impl ComplianceHookCheck for MockComplianceContract {
+    fn is_module_registered(e: &Env, hook: ComplianceHook, module: Address) -> bool {
+        e.storage().persistent().has(&MockComplianceStorageKey::Registered(hook, module))
+    }
+}
+
+#[contractimpl]
+impl MockComplianceContract {
+    pub fn register_hook(e: &Env, hook: ComplianceHook, module: Address) {
+        e.storage().persistent().set(&MockComplianceStorageKey::Registered(hook, module), &true);
+    }
+}
+
+#[test]
+fn verify_hook_wiring_sets_cache_when_registered() {
+    let e = Env::default();
+    let module_id = e.register(TestInitialLockupPeriodContract, ());
+    let compliance_id = e.register(MockComplianceContract, ());
+    let compliance = MockComplianceContractClient::new(&e, &compliance_id);
+
+    for hook in [
+        ComplianceHook::CanTransfer,
+        ComplianceHook::Created,
+        ComplianceHook::Transferred,
+        ComplianceHook::Destroyed,
+    ] {
+        compliance.register_hook(&hook, &module_id);
+    }
+
+    e.as_contract(&module_id, || {
+        set_compliance_address(&e, &compliance_id);
+
+        <TestInitialLockupPeriodContract as InitialLockupPeriod>::verify_hook_wiring(&e);
+
+        assert!(hooks_verified(&e));
+    });
 }
 
 #[test]
