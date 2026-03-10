@@ -524,6 +524,13 @@ pub enum ComplianceModuleError {
     IdentityRegistryNotSet = 397,
 }
 
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 48a90446 (refactor(rwa): move compliance module errors under compliance)
+=======
+>>>>>>> 48a90446 (refactor(rwa): move compliance module errors under compliance)
+>>>>>>> 9e9f27a7 (refactor(rwa): move compliance module errors under compliance)
 // ################## CONSTANTS ##################
 
 const DAY_IN_LEDGERS: u32 = 17280;
