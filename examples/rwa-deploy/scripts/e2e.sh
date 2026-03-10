@@ -177,13 +177,13 @@ assert_eq() {
 
 get_balance() {
   local OUT
-  OUT=$(invoke "$TOKEN" balance --account "$1" 2>&1)
+  OUT=$(invoke_readonly "$TOKEN" balance --account "$1" 2>&1)
   echo "$OUT" | extract_first_number
 }
 
 get_internal_supply() {
   local OUT
-  OUT=$(invoke "$SUPPLY_LIMIT" get_internal_supply --token "$TOKEN" 2>&1)
+  OUT=$(invoke_readonly "$SUPPLY_LIMIT" get_internal_supply --token "$TOKEN" 2>&1)
   echo "$OUT" | extract_first_number
 }
 

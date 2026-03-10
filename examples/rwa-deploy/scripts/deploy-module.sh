@@ -37,6 +37,8 @@ ADDR_FILE="$ROOT_DIR/examples/rwa-deploy/testnet-addresses.json"
 SOURCE="${STELLAR_SOURCE:-alice}"
 NETWORK="${STELLAR_NETWORK:-testnet}"
 
+. "$SCRIPT_DIR/common.sh"
+
 WASM_NAME="rwa_${MODULE//-/_}.wasm"
 WASM_PATH="$WASM_DIR/$WASM_NAME"
 
@@ -49,16 +51,6 @@ if [ ! -f "$ADDR_FILE" ]; then
   echo "ERROR: testnet-addresses.json not found. Run deploy.sh first." >&2
   exit 1
 fi
-
-read_addr() {
-  python3 -c "import json; d=json.load(open('$ADDR_FILE')); print(d$1)"
-}
-
-invoke() {
-  stellar contract invoke --id "$1" \
-    --source "$SOURCE" --network "$NETWORK" \
-    -- "${@:2}"
-}
 
 ADMIN=$(read_addr "['admin']")
 TOKEN=$(read_addr "['contracts']['token']")
@@ -89,9 +81,7 @@ invoke "$MODULE_ADDR" set_compliance_address --compliance "$COMPLIANCE"
 
 # ── Step 4: Register on hooks ──
 for HOOK in "${HOOKS[@]}"; do
-  echo "  Registering on $HOOK..."
-  invoke "$COMPLIANCE" add_module_to \
-    --hook "\"$HOOK\"" --module "$MODULE_ADDR" --operator "$ADMIN"
+  ensure_hook_registration "$HOOK" "$MODULE_ADDR" "$MODULE"
 done
 
 echo ""

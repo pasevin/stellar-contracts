@@ -12,7 +12,7 @@ compliance orchestration.
 | Crate         | Purpose                                                                      | Key traits / modules composed                                                   |
 | ------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | `irs/`        | Identity Registry Storage — stores investor identities and country data      | `IdentityRegistryStorage`, `CountryDataManager`, `TokenBinder`, `AccessControl` |
-| `verifier/`   | Identity Verifier — validates that an account has a registered identity      | `IdentityVerifier`                                                              |
+| `verifier/`   | Identity Verifier — validates that an account has a registered identity      | `IdentityVerifier`, `AccessControl`                                             |
 | `compliance/` | Compliance contract — orchestrates hook dispatch across registered modules   | `Compliance`, `TokenBinder`, `AccessControl`                                    |
 | `token/`      | RWA Token — compliant fungible token with freeze, forced transfer, and pause | `FungibleToken`, `RWAToken`, `Pausable`, `AccessControl`                        |
 

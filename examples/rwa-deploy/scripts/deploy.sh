@@ -30,6 +30,8 @@ ADDR_FILE="$ROOT_DIR/examples/rwa-deploy/testnet-addresses.json"
 SOURCE="${STELLAR_SOURCE:-alice}"
 NETWORK="${STELLAR_NETWORK:-testnet}"
 
+. "$SCRIPT_DIR/common.sh"
+
 if [ ! -d "$WASM_DIR" ] || [ -z "$(ls -A "$WASM_DIR" 2>/dev/null)" ]; then
   echo "ERROR: No WASMs found. Run build.sh first." >&2
   exit 1
@@ -50,10 +52,31 @@ deploy_contract() {
   echo "$ADDR"
 }
 
-invoke() {
-  stellar contract invoke --id "$1" \
-    --source "$SOURCE" --network "$NETWORK" \
-    -- "${@:2}"
+invoke_with_retry() {
+  local attempts=${STELLAR_INVOKE_RETRIES:-4}
+  local delay=${STELLAR_INVOKE_RETRY_DELAY_SECONDS:-3}
+  local attempt output status
+
+  for attempt in $(seq 1 "$attempts"); do
+    if output=$(invoke "$@" 2>&1); then
+      printf '%s\n' "$output"
+      return 0
+    fi
+    status=$?
+
+    if ! retryable_invoke_error "$output"; then
+      printf '%s\n' "$output" >&2
+      return "$status"
+    fi
+
+    if [ "$attempt" -eq "$attempts" ]; then
+      printf '%s\n' "$output" >&2
+      return "$status"
+    fi
+
+    echo "Retrying deploy invoke after transient Stellar CLI failure..." >&2
+    sleep $((delay * attempt))
+  done
 }
 
 write_addresses() {
@@ -110,8 +133,8 @@ TOKEN=$(deploy_contract "Token" \
 
 echo ""
 echo "=== Step 2/5: Binding token ==="
-invoke "$COMPLIANCE" bind_token --token "$TOKEN" --operator "$ADMIN"
-invoke "$IRS" bind_token --token "$TOKEN" --operator "$ADMIN"
+invoke_with_retry "$COMPLIANCE" bind_token --token "$TOKEN" --operator "$ADMIN"
+invoke_with_retry "$IRS" bind_token --token "$TOKEN" --operator "$ADMIN"
 echo "  Token bound to Compliance + IRS."
 
 # ── Step 3: Deploy all 7 modules ──
@@ -157,43 +180,43 @@ echo "=== Step 4/5: Configuring modules (before compliance bind) ==="
 
 # 4a. Set IRS on identity-aware modules
 echo "  Setting IRS on identity-aware modules..."
-invoke "$COUNTRY_ALLOW" set_identity_registry_storage --token "$TOKEN" --irs "$IRS"
-invoke "$COUNTRY_RESTRICT" set_identity_registry_storage --token "$TOKEN" --irs "$IRS"
-invoke "$MAX_BALANCE" set_identity_registry_storage --token "$TOKEN" --irs "$IRS"
-invoke "$TIME_TRANSFERS" set_identity_registry_storage --token "$TOKEN" --irs "$IRS"
+invoke_with_retry "$COUNTRY_ALLOW" set_identity_registry_storage --token "$TOKEN" --irs "$IRS"
+invoke_with_retry "$COUNTRY_RESTRICT" set_identity_registry_storage --token "$TOKEN" --irs "$IRS"
+invoke_with_retry "$MAX_BALANCE" set_identity_registry_storage --token "$TOKEN" --irs "$IRS"
+invoke_with_retry "$TIME_TRANSFERS" set_identity_registry_storage --token "$TOKEN" --irs "$IRS"
 
 # 4b. CountryAllow: allow US (840), GB (826), DE (276)
 echo "  CountryAllow: adding US, GB, DE..."
-invoke "$COUNTRY_ALLOW" add_allowed_country --token "$TOKEN" --country 840
-invoke "$COUNTRY_ALLOW" add_allowed_country --token "$TOKEN" --country 826
-invoke "$COUNTRY_ALLOW" add_allowed_country --token "$TOKEN" --country 276
+invoke_with_retry "$COUNTRY_ALLOW" add_allowed_country --token "$TOKEN" --country 840
+invoke_with_retry "$COUNTRY_ALLOW" add_allowed_country --token "$TOKEN" --country 826
+invoke_with_retry "$COUNTRY_ALLOW" add_allowed_country --token "$TOKEN" --country 276
 
 # 4c. CountryRestrict: restrict North Korea (408), Iran (364)
 echo "  CountryRestrict: blocking DPRK, IRN..."
-invoke "$COUNTRY_RESTRICT" add_country_restriction --token "$TOKEN" --country 408
-invoke "$COUNTRY_RESTRICT" add_country_restriction --token "$TOKEN" --country 364
+invoke_with_retry "$COUNTRY_RESTRICT" add_country_restriction --token "$TOKEN" --country 408
+invoke_with_retry "$COUNTRY_RESTRICT" add_country_restriction --token "$TOKEN" --country 364
 
 # 4d. MaxBalance: set limit of 1,000,000 tokens
 echo "  MaxBalance: setting limit 1000000..."
-invoke "$MAX_BALANCE" set_max_balance --token "$TOKEN" --max 1000000
+invoke_with_retry "$MAX_BALANCE" set_max_balance --token "$TOKEN" --max 1000000
 
 # 4e. SupplyLimit: set total supply limit of 10,000,000
 echo "  SupplyLimit: setting limit 10000000..."
-invoke "$SUPPLY_LIMIT" set_supply_limit --token "$TOKEN" --limit 10000000
+invoke_with_retry "$SUPPLY_LIMIT" set_supply_limit --token "$TOKEN" --limit 10000000
 
 # 4f. TimeTransfersLimits: set daily limit of 100,000
 echo "  TimeTransfersLimits: setting daily limit 100000..."
-invoke "$TIME_TRANSFERS" set_time_transfer_limit \
+invoke_with_retry "$TIME_TRANSFERS" set_time_transfer_limit \
   --token "$TOKEN" \
   --limit '{"limit_time":86400,"limit_value":"100000"}'
 
 # 4g. InitialLockupPeriod: set lockup to 300 seconds (5 min for testing)
 echo "  InitialLockupPeriod: setting lockup 300s..."
-invoke "$INITIAL_LOCKUP" set_lockup_period --token "$TOKEN" --lockup_seconds 300
+invoke_with_retry "$INITIAL_LOCKUP" set_lockup_period --token "$TOKEN" --lockup_seconds 300
 
 # 4h. TransferRestrict: allow the admin address
 echo "  TransferRestrict: allowing admin..."
-invoke "$TRANSFER_RESTRICT" allow_user --token "$TOKEN" --user "$ADMIN"
+invoke_with_retry "$TRANSFER_RESTRICT" allow_user --token "$TOKEN" --user "$ADMIN"
 
 echo "  All modules configured."
 
@@ -203,7 +226,7 @@ echo ""
 echo "=== Step 5/5: Locking all modules to compliance ==="
 for MODULE_ADDR in "$COUNTRY_ALLOW" "$COUNTRY_RESTRICT" "$INITIAL_LOCKUP" \
   "$MAX_BALANCE" "$SUPPLY_LIMIT" "$TIME_TRANSFERS" "$TRANSFER_RESTRICT"; do
-  invoke "$MODULE_ADDR" set_compliance_address --compliance "$COMPLIANCE"
+  invoke_with_retry "$MODULE_ADDR" set_compliance_address --compliance "$COMPLIANCE"
 done
 echo "  All 7 modules bound. Admin functions now require Compliance contract auth."
 
