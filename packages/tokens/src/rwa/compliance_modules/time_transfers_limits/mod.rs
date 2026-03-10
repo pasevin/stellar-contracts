@@ -15,7 +15,7 @@ use storage::{get_counter, get_limits, set_counter, set_limits};
 pub use storage::{Limit, TransferCounter};
 
 use super::common::{
-    checked_add_i128, get_compliance_address, get_irs_client, hooks_verified, module_name,
+    add_i128_or_panic, get_compliance_address, get_irs_client, hooks_verified, module_name,
     require_compliance_auth, require_non_negative_amount, set_irs_address, verify_required_hooks,
 };
 use crate::rwa::compliance::{ComplianceHook, ComplianceModuleError};
@@ -62,7 +62,7 @@ fn increase_counters(e: &Env, token: &Address, identity: &Address, value: i128) 
     for limit in limits.iter() {
         reset_counter_if_needed(e, token, identity, limit.limit_time);
         let mut counter = get_counter(e, token, identity, limit.limit_time);
-        counter.value = checked_add_i128(e, counter.value, value);
+        counter.value = add_i128_or_panic(e, counter.value, value);
         set_counter(e, token, identity, limit.limit_time, &counter);
     }
 }
@@ -211,7 +211,7 @@ pub trait TimeTransfersLimits {
 
             if !is_counter_finished(e, &token, &from_id, limit.limit_time) {
                 let counter = get_counter(e, &token, &from_id, limit.limit_time);
-                if checked_add_i128(e, counter.value, amount) > limit.limit_value {
+                if add_i128_or_panic(e, counter.value, amount) > limit.limit_value {
                     return false;
                 }
             }

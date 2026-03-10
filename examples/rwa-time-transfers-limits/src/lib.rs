@@ -7,7 +7,7 @@ use stellar_tokens::rwa::{
     compliance::{ComplianceHook, ComplianceModuleError},
     compliance_modules::{
         common::{
-            checked_add_i128, get_compliance_address, get_irs_client, set_compliance_address,
+            add_i128_or_panic, get_compliance_address, get_irs_client, set_compliance_address,
             set_irs_address, verify_required_hooks,
         },
         time_transfers_limits::{
@@ -63,7 +63,7 @@ fn increase_counters(e: &Env, token: &Address, identity: &Address, value: i128) 
     for limit in limits.iter() {
         reset_counter_if_needed(e, token, identity, limit.limit_time);
         let mut counter = get_counter(e, token, identity, limit.limit_time);
-        counter.value = checked_add_i128(e, counter.value, value);
+        counter.value = add_i128_or_panic(e, counter.value, value);
         set_counter(e, token, identity, limit.limit_time, &counter);
     }
 }

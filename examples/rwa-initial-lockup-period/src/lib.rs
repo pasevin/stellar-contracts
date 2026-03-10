@@ -5,7 +5,7 @@ use stellar_tokens::rwa::{
     compliance::ComplianceHook,
     compliance_modules::{
         common::{
-            checked_add_i128, checked_sub_i128, get_compliance_address, set_compliance_address,
+            add_i128_or_panic, get_compliance_address, set_compliance_address, sub_i128_or_panic,
             verify_required_hooks,
         },
         initial_lockup_period::{
@@ -49,7 +49,7 @@ fn calculate_unlocked_amount(e: &Env, locks: &Vec<LockedTokens>) -> i128 {
     for i in 0..locks.len() {
         let lock = locks.get(i).unwrap();
         if lock.release_timestamp <= now {
-            unlocked = checked_add_i128(e, unlocked, lock.amount);
+            unlocked = add_i128_or_panic(e, unlocked, lock.amount);
         }
     }
     unlocked
@@ -65,12 +65,12 @@ fn update_locked_tokens(e: &Env, token: &Address, wallet: &Address, mut amount_t
         let lock = locks.get(i).unwrap();
         if amount_to_consume > 0 && lock.release_timestamp <= now {
             if amount_to_consume >= lock.amount {
-                amount_to_consume = checked_sub_i128(e, amount_to_consume, lock.amount);
-                consumed_total = checked_add_i128(e, consumed_total, lock.amount);
+                amount_to_consume = sub_i128_or_panic(e, amount_to_consume, lock.amount);
+                consumed_total = add_i128_or_panic(e, consumed_total, lock.amount);
             } else {
-                consumed_total = checked_add_i128(e, consumed_total, amount_to_consume);
+                consumed_total = add_i128_or_panic(e, consumed_total, amount_to_consume);
                 new_locks.push_back(LockedTokens {
-                    amount: checked_sub_i128(e, lock.amount, amount_to_consume),
+                    amount: sub_i128_or_panic(e, lock.amount, amount_to_consume),
                     release_timestamp: lock.release_timestamp,
                 });
                 amount_to_consume = 0;
@@ -83,7 +83,7 @@ fn update_locked_tokens(e: &Env, token: &Address, wallet: &Address, mut amount_t
     set_locks(e, token, wallet, &new_locks);
 
     let total_locked = get_total_locked(e, token, wallet);
-    set_total_locked(e, token, wallet, checked_sub_i128(e, total_locked, consumed_total));
+    set_total_locked(e, token, wallet, sub_i128_or_panic(e, total_locked, consumed_total));
 }
 
 #[contractimpl]
@@ -118,7 +118,7 @@ impl InitialLockupPeriod for InitialLockupPeriodContract {
                 e,
                 lock.amount,
             );
-            total_locked = checked_add_i128(e, total_locked, lock.amount);
+            total_locked = add_i128_or_panic(e, total_locked, lock.amount);
         }
 
         assert!(
@@ -162,10 +162,10 @@ impl InitialLockupPeriod for InitialLockupPeriodContract {
         }
 
         let from_bal = get_internal_balance(e, &token, &from);
-        set_internal_balance(e, &token, &from, checked_sub_i128(e, from_bal, amount));
+        set_internal_balance(e, &token, &from, sub_i128_or_panic(e, from_bal, amount));
 
         let to_bal = get_internal_balance(e, &token, &to);
-        set_internal_balance(e, &token, &to, checked_add_i128(e, to_bal, amount));
+        set_internal_balance(e, &token, &to, add_i128_or_panic(e, to_bal, amount));
     }
 
     fn on_created(e: &Env, to: Address, amount: i128, token: Address) {
@@ -182,11 +182,11 @@ impl InitialLockupPeriod for InitialLockupPeriodContract {
             set_locks(e, &token, &to, &locks);
 
             let total = get_total_locked(e, &token, &to);
-            set_total_locked(e, &token, &to, checked_add_i128(e, total, amount));
+            set_total_locked(e, &token, &to, add_i128_or_panic(e, total, amount));
         }
 
         let current = get_internal_balance(e, &token, &to);
-        set_internal_balance(e, &token, &to, checked_add_i128(e, current, amount));
+        set_internal_balance(e, &token, &to, add_i128_or_panic(e, current, amount));
     }
 
     fn on_destroyed(e: &Env, from: Address, amount: i128, token: Address) {
@@ -217,7 +217,7 @@ impl InitialLockupPeriod for InitialLockupPeriodContract {
         }
 
         let current = get_internal_balance(e, &token, &from);
-        set_internal_balance(e, &token, &from, checked_sub_i128(e, current, amount));
+        set_internal_balance(e, &token, &from, sub_i128_or_panic(e, current, amount));
     }
 
     fn set_compliance_address(e: &Env, compliance: Address) {
