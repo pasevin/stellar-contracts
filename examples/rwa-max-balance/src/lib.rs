@@ -5,8 +5,9 @@ use stellar_tokens::rwa::{
     compliance::ComplianceHook,
     compliance_modules::{
         common::{
-            checked_add_i128, checked_sub_i128, get_compliance_address, get_irs_client,
+            add_i128_or_panic, get_compliance_address, get_irs_client,
             set_compliance_address, set_irs_address, verify_required_hooks,
+            sub_i128_or_panic,
         },
         max_balance::{
             storage::{get_id_balance, get_max_balance, set_id_balance, set_max_balance},
@@ -117,7 +118,7 @@ impl MaxBalance for MaxBalanceContract {
 
         let from_balance = get_id_balance(e, &token, &from_id);
         let to_balance = get_id_balance(e, &token, &to_id);
-        let new_to_balance = checked_add_i128(e, to_balance, amount);
+        let new_to_balance = add_i128_or_panic(e, to_balance, amount);
 
         let max = get_max_balance(e, &token);
         assert!(
@@ -125,7 +126,7 @@ impl MaxBalance for MaxBalanceContract {
             "MaxBalanceModule: recipient identity balance exceeds max"
         );
 
-        set_id_balance(e, &token, &from_id, checked_sub_i128(e, from_balance, amount));
+        set_id_balance(e, &token, &from_id, sub_i128_or_panic(e, from_balance, amount));
         set_id_balance(e, &token, &to_id, new_to_balance);
     }
 
@@ -137,7 +138,7 @@ impl MaxBalance for MaxBalanceContract {
         let to_id = irs.stored_identity(&to);
 
         let current = get_id_balance(e, &token, &to_id);
-        let new_balance = checked_add_i128(e, current, amount);
+        let new_balance = add_i128_or_panic(e, current, amount);
 
         let max = get_max_balance(e, &token);
         assert!(
@@ -156,7 +157,7 @@ impl MaxBalance for MaxBalanceContract {
         let from_id = irs.stored_identity(&from);
 
         let current = get_id_balance(e, &token, &from_id);
-        set_id_balance(e, &token, &from_id, checked_sub_i128(e, current, amount));
+        set_id_balance(e, &token, &from_id, sub_i128_or_panic(e, current, amount));
     }
 
     fn set_compliance_address(e: &Env, compliance: Address) {

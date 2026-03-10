@@ -5,7 +5,7 @@ use stellar_tokens::rwa::{
     compliance::ComplianceHook,
     compliance_modules::{
         common::{
-            checked_add_i128, checked_sub_i128, get_compliance_address, set_compliance_address,
+            add_i128_or_panic, get_compliance_address, set_compliance_address, sub_i128_or_panic,
             verify_required_hooks,
         },
         supply_limit::{
@@ -84,14 +84,14 @@ impl SupplyLimit for SupplyLimitContract {
         require_module_admin_or_compliance_auth(e);
         stellar_tokens::rwa::compliance_modules::common::require_non_negative_amount(e, amount);
         let current = get_internal_supply(e, &token);
-        set_internal_supply(e, &token, checked_add_i128(e, current, amount));
+        set_internal_supply(e, &token, add_i128_or_panic(e, current, amount));
     }
 
     fn on_destroyed(e: &Env, _from: Address, amount: i128, token: Address) {
         require_module_admin_or_compliance_auth(e);
         stellar_tokens::rwa::compliance_modules::common::require_non_negative_amount(e, amount);
         let current = get_internal_supply(e, &token);
-        set_internal_supply(e, &token, checked_sub_i128(e, current, amount));
+        set_internal_supply(e, &token, sub_i128_or_panic(e, current, amount));
     }
 
     fn set_compliance_address(e: &Env, compliance: Address) {

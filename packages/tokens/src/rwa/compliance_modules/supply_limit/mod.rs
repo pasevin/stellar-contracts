@@ -13,8 +13,9 @@ use soroban_sdk::{contractevent, contracttrait, vec, Address, Env, String, Vec};
 use storage::{get_internal_supply, get_supply_limit, set_internal_supply, set_supply_limit};
 
 use super::common::{
-    checked_add_i128, checked_sub_i128, get_compliance_address, hooks_verified, module_name,
-    require_compliance_auth, require_non_negative_amount, verify_required_hooks,
+    add_i128_or_panic, get_compliance_address, hooks_verified, module_name,
+    require_compliance_auth, require_non_negative_amount, sub_i128_or_panic,
+    verify_required_hooks,
 };
 use crate::rwa::compliance::ComplianceHook;
 
@@ -64,14 +65,14 @@ pub trait SupplyLimit {
         require_compliance_auth(e);
         require_non_negative_amount(e, amount);
         let current = get_internal_supply(e, &token);
-        set_internal_supply(e, &token, checked_add_i128(e, current, amount));
+        set_internal_supply(e, &token, add_i128_or_panic(e, current, amount));
     }
 
     fn on_destroyed(e: &Env, _from: Address, amount: i128, token: Address) {
         require_compliance_auth(e);
         require_non_negative_amount(e, amount);
         let current = get_internal_supply(e, &token);
-        set_internal_supply(e, &token, checked_sub_i128(e, current, amount));
+        set_internal_supply(e, &token, sub_i128_or_panic(e, current, amount));
     }
 
     fn can_transfer(
@@ -98,7 +99,7 @@ pub trait SupplyLimit {
             return true;
         }
         let supply = get_internal_supply(e, &token);
-        checked_add_i128(e, supply, amount) <= limit
+        add_i128_or_panic(e, supply, amount) <= limit
     }
 
     fn name(e: &Env) -> String {

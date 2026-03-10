@@ -14,8 +14,8 @@ use soroban_sdk::{contractevent, contracttrait, vec, Address, Env, String, Vec};
 use storage::{get_id_balance, get_max_balance, set_id_balance, set_max_balance};
 
 use super::common::{
-    checked_add_i128, checked_sub_i128, get_compliance_address, get_irs_client, hooks_verified,
-    module_name, require_compliance_auth, require_non_negative_amount, set_irs_address,
+    add_i128_or_panic, get_compliance_address, get_irs_client, hooks_verified, module_name,
+    require_compliance_auth, require_non_negative_amount, set_irs_address, sub_i128_or_panic,
     verify_required_hooks,
 };
 use crate::rwa::compliance::ComplianceHook;
@@ -55,7 +55,7 @@ fn can_increase_identity_balance(
     }
 
     let current = get_id_balance(e, token, identity);
-    checked_add_i128(e, current, amount) <= max
+    add_i128_or_panic(e, current, amount) <= max
 }
 
 #[contracttrait]
@@ -137,8 +137,8 @@ pub trait MaxBalance {
         );
 
         let to_balance = get_id_balance(e, &token, &to_id);
-        let new_to_balance = checked_add_i128(e, to_balance, amount);
-        set_id_balance(e, &token, &from_id, checked_sub_i128(e, from_balance, amount));
+        let new_to_balance = add_i128_or_panic(e, to_balance, amount);
+        set_id_balance(e, &token, &from_id, sub_i128_or_panic(e, from_balance, amount));
         set_id_balance(e, &token, &to_id, new_to_balance);
     }
 
@@ -155,7 +155,7 @@ pub trait MaxBalance {
         );
 
         let current = get_id_balance(e, &token, &to_id);
-        let new_balance = checked_add_i128(e, current, amount);
+        let new_balance = add_i128_or_panic(e, current, amount);
         set_id_balance(e, &token, &to_id, new_balance);
     }
 
@@ -167,7 +167,7 @@ pub trait MaxBalance {
         let from_id = irs.stored_identity(&from);
 
         let current = get_id_balance(e, &token, &from_id);
-        set_id_balance(e, &token, &from_id, checked_sub_i128(e, current, amount));
+        set_id_balance(e, &token, &from_id, sub_i128_or_panic(e, current, amount));
     }
 
     fn can_transfer(e: &Env, from: Address, to: Address, amount: i128, token: Address) -> bool {
