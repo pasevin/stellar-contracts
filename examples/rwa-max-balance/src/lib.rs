@@ -5,9 +5,8 @@ use stellar_tokens::rwa::{
     compliance::ComplianceHook,
     compliance_modules::{
         common::{
-            add_i128_or_panic, get_compliance_address, get_irs_client,
-            set_compliance_address, set_irs_address, verify_required_hooks,
-            sub_i128_or_panic,
+            add_i128_or_panic, get_compliance_address, get_irs_client, set_compliance_address,
+            set_irs_address, sub_i128_or_panic, verify_required_hooks,
         },
         max_balance::{
             storage::{get_id_balance, get_max_balance, set_id_balance, set_max_balance},
