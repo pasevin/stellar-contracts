@@ -18,7 +18,7 @@ use super::common::{
     checked_add_i128, get_compliance_address, get_irs_client, hooks_verified, module_name,
     require_compliance_auth, require_non_negative_amount, set_irs_address, verify_required_hooks,
 };
-use crate::rwa::{compliance::ComplianceHook, compliance_modules::ComplianceModuleError};
+use crate::rwa::compliance::{ComplianceHook, ComplianceModuleError};
 
 const MAX_LIMITS_PER_TOKEN: u32 = 4;
 

@@ -4,7 +4,7 @@ use soroban_sdk::{
     contract, contractimpl, contracttype, panic_with_error, vec, Address, Env, String, Vec,
 };
 use stellar_tokens::rwa::{
-    compliance::ComplianceHook,
+    compliance::{ComplianceHook, ComplianceModuleError},
     compliance_modules::{
         common::{
             checked_add_i128, get_compliance_address, get_irs_client, set_compliance_address,
@@ -15,7 +15,6 @@ use stellar_tokens::rwa::{
             Limit, TimeTransferLimitRemoved, TimeTransferLimitUpdated, TimeTransfersLimits,
             TransferCounter,
         },
-        ComplianceModuleError,
     },
 };
 
