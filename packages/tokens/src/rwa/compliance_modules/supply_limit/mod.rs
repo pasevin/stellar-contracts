@@ -13,8 +13,8 @@ use soroban_sdk::{contractevent, contracttrait, vec, Address, Env, String, Vec};
 use storage::{get_internal_supply, get_supply_limit, set_internal_supply, set_supply_limit};
 
 use super::common::{
-    add_i128_or_panic, get_compliance_address, hooks_verified, module_name, require_non_negative_amount,
-    sub_i128_or_panic, verify_required_hooks,
+    add_i128_or_panic, get_compliance_address, hooks_verified, module_name,
+    require_non_negative_amount, sub_i128_or_panic, verify_required_hooks,
 };
 use crate::rwa::compliance::ComplianceHook;
 

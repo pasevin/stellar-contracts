@@ -32,10 +32,8 @@ fn get_admin(e: &Env) -> Address {
 }
 
 fn require_module_admin_or_compliance_auth(e: &Env) {
-    if let Some(compliance) = e
-        .storage()
-        .instance()
-        .get::<_, Address>(&ComplianceModuleStorageKey::Compliance)
+    if let Some(compliance) =
+        e.storage().instance().get::<_, Address>(&ComplianceModuleStorageKey::Compliance)
     {
         compliance.require_auth();
     } else {
