@@ -7,8 +7,8 @@ use stellar_tokens::rwa::{
     compliance::{ComplianceHook, ComplianceModuleError},
     compliance_modules::{
         common::{
-            add_i128_or_panic, get_compliance_address, get_irs_client, set_compliance_address,
-            set_irs_address, verify_required_hooks,
+            add_i128_or_panic, get_irs_client, set_compliance_address, set_irs_address,
+            verify_required_hooks, ComplianceModuleStorageKey,
         },
         time_transfers_limits::{
             storage::{get_counter, get_limits, set_counter, set_limits},
@@ -37,11 +37,14 @@ fn get_admin(e: &Env) -> Address {
 }
 
 fn require_module_admin_or_compliance_auth(e: &Env) {
-    let compliance = get_compliance_address(e);
-    if compliance == e.current_contract_address() {
-        get_admin(e).require_auth();
-    } else {
+    if let Some(compliance) = e
+        .storage()
+        .instance()
+        .get::<_, Address>(&ComplianceModuleStorageKey::Compliance)
+    {
         compliance.require_auth();
+    } else {
+        get_admin(e).require_auth();
     }
 }
 

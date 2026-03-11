@@ -2,7 +2,7 @@
 
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Vec};
 use stellar_tokens::rwa::compliance_modules::{
-    common::{get_compliance_address, set_compliance_address},
+    common::{ComplianceModuleStorageKey, set_compliance_address},
     transfer_restrict::{
         storage::{is_user_allowed, remove_user_allowed, set_user_allowed},
         TransferRestrict, UserAllowed, UserDisallowed,
@@ -26,11 +26,14 @@ fn get_admin(e: &Env) -> Address {
 }
 
 fn require_module_admin_or_compliance_auth(e: &Env) {
-    let compliance = get_compliance_address(e);
-    if compliance == e.current_contract_address() {
-        get_admin(e).require_auth();
-    } else {
+    if let Some(compliance) = e
+        .storage()
+        .instance()
+        .get::<_, Address>(&ComplianceModuleStorageKey::Compliance)
+    {
         compliance.require_auth();
+    } else {
+        get_admin(e).require_auth();
     }
 }
 
