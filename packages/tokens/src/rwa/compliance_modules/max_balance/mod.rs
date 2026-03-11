@@ -15,8 +15,7 @@ use storage::{get_id_balance, get_max_balance, set_id_balance, set_max_balance};
 
 use super::common::{
     add_i128_or_panic, get_compliance_address, get_irs_client, hooks_verified, module_name,
-    require_compliance_auth, require_non_negative_amount, set_irs_address, sub_i128_or_panic,
-    verify_required_hooks,
+    require_non_negative_amount, set_irs_address, sub_i128_or_panic, verify_required_hooks,
 };
 use crate::rwa::compliance::ComplianceHook;
 
@@ -61,19 +60,19 @@ fn can_increase_identity_balance(
 #[contracttrait]
 pub trait MaxBalance {
     fn set_identity_registry_storage(e: &Env, token: Address, irs: Address) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         set_irs_address(e, &token, &irs);
     }
 
     fn set_max_balance(e: &Env, token: Address, max: i128) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         require_non_negative_amount(e, max);
         set_max_balance(e, &token, max);
         MaxBalanceSet { token, max_balance: max }.publish(e);
     }
 
     fn pre_set_module_state(e: &Env, token: Address, identity: Address, balance: i128) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         require_non_negative_amount(e, balance);
         set_id_balance(e, &token, &identity, balance);
         IDBalancePreSet { token, identity, balance }.publish(e);
@@ -85,7 +84,7 @@ pub trait MaxBalance {
         identities: Vec<Address>,
         balances: Vec<i128>,
     ) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         assert!(
             identities.len() == balances.len(),
             "MaxBalanceModule: identities and balances length mismatch"
@@ -119,7 +118,7 @@ pub trait MaxBalance {
     }
 
     fn on_transfer(e: &Env, from: Address, to: Address, amount: i128, token: Address) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         require_non_negative_amount(e, amount);
 
         let irs = get_irs_client(e, &token);
@@ -143,7 +142,7 @@ pub trait MaxBalance {
     }
 
     fn on_created(e: &Env, to: Address, amount: i128, token: Address) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         require_non_negative_amount(e, amount);
 
         let irs = get_irs_client(e, &token);
@@ -160,7 +159,7 @@ pub trait MaxBalance {
     }
 
     fn on_destroyed(e: &Env, from: Address, amount: i128, token: Address) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         require_non_negative_amount(e, amount);
 
         let irs = get_irs_client(e, &token);

@@ -13,9 +13,8 @@ use soroban_sdk::{contractevent, contracttrait, vec, Address, Env, String, Vec};
 use storage::{get_internal_supply, get_supply_limit, set_internal_supply, set_supply_limit};
 
 use super::common::{
-    add_i128_or_panic, get_compliance_address, hooks_verified, module_name,
-    require_compliance_auth, require_non_negative_amount, sub_i128_or_panic,
-    verify_required_hooks,
+    add_i128_or_panic, get_compliance_address, hooks_verified, module_name, require_non_negative_amount,
+    sub_i128_or_panic, verify_required_hooks,
 };
 use crate::rwa::compliance::ComplianceHook;
 
@@ -31,14 +30,14 @@ pub struct SupplyLimitSet {
 #[contracttrait]
 pub trait SupplyLimit {
     fn set_supply_limit(e: &Env, token: Address, limit: i128) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         require_non_negative_amount(e, limit);
         set_supply_limit(e, &token, limit);
         SupplyLimitSet { token, limit }.publish(e);
     }
 
     fn pre_set_internal_supply(e: &Env, token: Address, supply: i128) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         require_non_negative_amount(e, supply);
         set_internal_supply(e, &token, supply);
     }
@@ -62,14 +61,14 @@ pub trait SupplyLimit {
     fn on_transfer(_e: &Env, _from: Address, _to: Address, _amount: i128, _token: Address) {}
 
     fn on_created(e: &Env, _to: Address, amount: i128, token: Address) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         require_non_negative_amount(e, amount);
         let current = get_internal_supply(e, &token);
         set_internal_supply(e, &token, add_i128_or_panic(e, current, amount));
     }
 
     fn on_destroyed(e: &Env, _from: Address, amount: i128, token: Address) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         require_non_negative_amount(e, amount);
         let current = get_internal_supply(e, &token);
         set_internal_supply(e, &token, sub_i128_or_panic(e, current, amount));
