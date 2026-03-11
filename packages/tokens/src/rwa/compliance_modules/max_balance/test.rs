@@ -9,11 +9,12 @@ use super::{
     *,
 };
 use crate::rwa::{
-    compliance::ComplianceHook,
+    compliance::{Compliance, ComplianceHook},
     compliance_modules::common::{
-        hooks_verified, set_compliance_address, set_irs_address, ComplianceHookCheck, IRSRead,
+        hooks_verified, set_compliance_address, set_irs_address, IRSRead,
     },
     identity_registry_storage::CountryData,
+    utils::token_binder::TokenBinder,
 };
 
 #[contract]
@@ -56,9 +57,62 @@ enum MockComplianceStorageKey {
 }
 
 #[contractimpl]
-impl ComplianceHookCheck for MockComplianceContract {
+impl Compliance for MockComplianceContract {
+    fn add_module_to(_e: &Env, _hook: ComplianceHook, _module: Address, _operator: Address) {
+        unreachable!("add_module_to is not used in these tests");
+    }
+
+    fn remove_module_from(_e: &Env, _hook: ComplianceHook, _module: Address, _operator: Address) {
+        unreachable!("remove_module_from is not used in these tests");
+    }
+
+    fn get_modules_for_hook(_e: &Env, _hook: ComplianceHook) -> Vec<Address> {
+        unreachable!("get_modules_for_hook is not used in these tests");
+    }
+
     fn is_module_registered(e: &Env, hook: ComplianceHook, module: Address) -> bool {
         e.storage().persistent().has(&MockComplianceStorageKey::Registered(hook, module))
+    }
+
+    fn transferred(_e: &Env, _from: Address, _to: Address, _amount: i128, _token: Address) {
+        unreachable!("transferred is not used in these tests");
+    }
+
+    fn created(_e: &Env, _to: Address, _amount: i128, _token: Address) {
+        unreachable!("created is not used in these tests");
+    }
+
+    fn destroyed(_e: &Env, _from: Address, _amount: i128, _token: Address) {
+        unreachable!("destroyed is not used in these tests");
+    }
+
+    fn can_transfer(
+        _e: &Env,
+        _from: Address,
+        _to: Address,
+        _amount: i128,
+        _token: Address,
+    ) -> bool {
+        unreachable!("can_transfer is not used in these tests");
+    }
+
+    fn can_create(_e: &Env, _to: Address, _amount: i128, _token: Address) -> bool {
+        unreachable!("can_create is not used in these tests");
+    }
+}
+
+#[contractimpl]
+impl TokenBinder for MockComplianceContract {
+    fn linked_tokens(e: &Env) -> Vec<Address> {
+        Vec::new(e)
+    }
+
+    fn bind_token(_e: &Env, _token: Address, _operator: Address) {
+        unreachable!("bind_token is not used in these tests");
+    }
+
+    fn unbind_token(_e: &Env, _token: Address, _operator: Address) {
+        unreachable!("unbind_token is not used in these tests");
     }
 }
 
