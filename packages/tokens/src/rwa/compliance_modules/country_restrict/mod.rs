@@ -12,8 +12,7 @@ use soroban_sdk::{contractevent, contracttrait, Address, Env, String, Vec};
 use storage::{is_country_restricted, remove_country_restricted, set_country_restricted};
 
 use super::common::{
-    country_code, get_compliance_address, get_irs_client, module_name, require_compliance_auth,
-    set_irs_address,
+    country_code, get_compliance_address, get_irs_client, module_name, set_irs_address,
 };
 
 /// Emitted when a country is added to the restriction list.
@@ -53,7 +52,7 @@ pub trait CountryRestrict {
     ///
     /// Requires compliance contract authorization.
     fn set_identity_registry_storage(e: &Env, token: Address, irs: Address) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         set_irs_address(e, &token, &irs);
     }
 
@@ -73,7 +72,7 @@ pub trait CountryRestrict {
     ///
     /// Emits [`CountryRestricted`].
     fn add_country_restriction(e: &Env, token: Address, country: u32) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         set_country_restricted(e, &token, country);
         CountryRestricted { token, country }.publish(e);
     }
@@ -94,7 +93,7 @@ pub trait CountryRestrict {
     ///
     /// Emits [`CountryUnrestricted`].
     fn remove_country_restriction(e: &Env, token: Address, country: u32) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         remove_country_restricted(e, &token, country);
         CountryUnrestricted { token, country }.publish(e);
     }
@@ -115,7 +114,7 @@ pub trait CountryRestrict {
     ///
     /// Emits [`CountryRestricted`] for each country added.
     fn batch_restrict_countries(e: &Env, token: Address, countries: Vec<u32>) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         for country in countries.iter() {
             set_country_restricted(e, &token, country);
             CountryRestricted { token: token.clone(), country }.publish(e);
@@ -139,7 +138,7 @@ pub trait CountryRestrict {
     ///
     /// Emits [`CountryUnrestricted`] for each country removed.
     fn batch_unrestrict_countries(e: &Env, token: Address, countries: Vec<u32>) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         for country in countries.iter() {
             remove_country_restricted(e, &token, country);
             CountryUnrestricted { token: token.clone(), country }.publish(e);

@@ -12,8 +12,7 @@ use soroban_sdk::{contractevent, contracttrait, Address, Env, String, Vec};
 use storage::{is_country_allowed, remove_country_allowed, set_country_allowed};
 
 use super::common::{
-    country_code, get_compliance_address, get_irs_client, module_name, require_compliance_auth,
-    set_irs_address,
+    country_code, get_compliance_address, get_irs_client, module_name, set_irs_address,
 };
 
 /// Emitted when a country is added to the allowlist.
@@ -53,7 +52,7 @@ pub trait CountryAllow {
     ///
     /// Requires compliance contract authorization.
     fn set_identity_registry_storage(e: &Env, token: Address, irs: Address) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         set_irs_address(e, &token, &irs);
     }
 
@@ -73,7 +72,7 @@ pub trait CountryAllow {
     ///
     /// Emits [`CountryAllowed`].
     fn add_allowed_country(e: &Env, token: Address, country: u32) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         set_country_allowed(e, &token, country);
         CountryAllowed { token, country }.publish(e);
     }
@@ -94,7 +93,7 @@ pub trait CountryAllow {
     ///
     /// Emits [`CountryUnallowed`].
     fn remove_allowed_country(e: &Env, token: Address, country: u32) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         remove_country_allowed(e, &token, country);
         CountryUnallowed { token, country }.publish(e);
     }
@@ -115,7 +114,7 @@ pub trait CountryAllow {
     ///
     /// Emits [`CountryAllowed`] for each country added.
     fn batch_allow_countries(e: &Env, token: Address, countries: Vec<u32>) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         for country in countries.iter() {
             set_country_allowed(e, &token, country);
             CountryAllowed { token: token.clone(), country }.publish(e);
@@ -138,7 +137,7 @@ pub trait CountryAllow {
     ///
     /// Emits [`CountryUnallowed`] for each country removed.
     fn batch_disallow_countries(e: &Env, token: Address, countries: Vec<u32>) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         for country in countries.iter() {
             remove_country_allowed(e, &token, country);
             CountryUnallowed { token: token.clone(), country }.publish(e);
