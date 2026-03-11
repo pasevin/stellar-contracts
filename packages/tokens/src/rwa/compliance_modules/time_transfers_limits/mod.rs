@@ -16,7 +16,7 @@ pub use storage::{Limit, TransferCounter};
 
 use super::common::{
     add_i128_or_panic, get_compliance_address, get_irs_client, hooks_verified, module_name,
-    require_compliance_auth, require_non_negative_amount, set_irs_address, verify_required_hooks,
+    require_non_negative_amount, set_irs_address, verify_required_hooks,
 };
 use crate::rwa::compliance::{ComplianceHook, ComplianceModuleError};
 
@@ -74,12 +74,12 @@ fn increase_counters(e: &Env, token: &Address, identity: &Address, value: i128) 
 #[contracttrait]
 pub trait TimeTransfersLimits {
     fn set_identity_registry_storage(e: &Env, token: Address, irs: Address) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         set_irs_address(e, &token, &irs);
     }
 
     fn set_time_transfer_limit(e: &Env, token: Address, limit: Limit) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         assert!(limit.limit_time > 0, "limit_time must be greater than zero");
         require_non_negative_amount(e, limit.limit_value);
         let mut limits = get_limits(e, &token);
@@ -106,14 +106,14 @@ pub trait TimeTransfersLimits {
     }
 
     fn batch_set_time_transfer_limit(e: &Env, token: Address, limits: Vec<Limit>) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         for limit in limits.iter() {
             Self::set_time_transfer_limit(e, token.clone(), limit);
         }
     }
 
     fn remove_time_transfer_limit(e: &Env, token: Address, limit_time: u64) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         let mut limits = get_limits(e, &token);
 
         let mut found = false;
@@ -135,7 +135,7 @@ pub trait TimeTransfersLimits {
     }
 
     fn batch_remove_time_transfer_limit(e: &Env, token: Address, limit_times: Vec<u64>) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         for lt in limit_times.iter() {
             Self::remove_time_transfer_limit(e, token.clone(), lt);
         }
@@ -152,7 +152,7 @@ pub trait TimeTransfersLimits {
         limit_time: u64,
         counter: TransferCounter,
     ) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         require_non_negative_amount(e, counter.value);
         assert!(limit_time > 0, "limit_time must be greater than zero");
 
@@ -180,7 +180,7 @@ pub trait TimeTransfersLimits {
     }
 
     fn on_transfer(e: &Env, from: Address, _to: Address, amount: i128, token: Address) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         require_non_negative_amount(e, amount);
         let irs = get_irs_client(e, &token);
         let from_id = irs.stored_identity(&from);

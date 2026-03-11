@@ -20,7 +20,7 @@ use storage::{
 
 use super::common::{
     add_i128_or_panic, get_compliance_address, hooks_verified, module_name,
-    require_compliance_auth, require_non_negative_amount, sub_i128_or_panic, verify_required_hooks,
+    require_non_negative_amount, sub_i128_or_panic, verify_required_hooks,
 };
 use crate::rwa::compliance::ComplianceHook;
 
@@ -97,7 +97,7 @@ fn update_locked_tokens(e: &Env, token: &Address, wallet: &Address, mut amount_t
 #[contracttrait]
 pub trait InitialLockupPeriod {
     fn set_lockup_period(e: &Env, token: Address, lockup_seconds: u64) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         set_lockup_period(e, &token, lockup_seconds);
         LockupPeriodSet { token, lockup_seconds }.publish(e);
     }
@@ -125,7 +125,7 @@ pub trait InitialLockupPeriod {
         balance: i128,
         locks: Vec<LockedTokens>,
     ) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         require_non_negative_amount(e, balance);
 
         let total_locked = calculate_total_locked_amount(e, &locks);
@@ -154,7 +154,7 @@ pub trait InitialLockupPeriod {
     }
 
     fn on_transfer(e: &Env, from: Address, to: Address, amount: i128, token: Address) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         require_non_negative_amount(e, amount);
 
         let total_locked = get_total_locked(e, &token, &from);
@@ -177,7 +177,7 @@ pub trait InitialLockupPeriod {
     }
 
     fn on_created(e: &Env, to: Address, amount: i128, token: Address) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         require_non_negative_amount(e, amount);
 
         let period = get_lockup_period(e, &token);
@@ -198,7 +198,7 @@ pub trait InitialLockupPeriod {
     }
 
     fn on_destroyed(e: &Env, from: Address, amount: i128, token: Address) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         require_non_negative_amount(e, amount);
 
         let total_locked = get_total_locked(e, &token, &from);

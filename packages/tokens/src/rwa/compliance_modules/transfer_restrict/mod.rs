@@ -13,7 +13,7 @@ mod test;
 use soroban_sdk::{contractevent, contracttrait, Address, Env, String, Vec};
 use storage::{is_user_allowed, remove_user_allowed, set_user_allowed};
 
-use super::common::{get_compliance_address, module_name, require_compliance_auth};
+use super::common::{get_compliance_address, module_name};
 
 /// Emitted when an address is added to the transfer allowlist.
 #[contractevent]
@@ -56,7 +56,7 @@ pub trait TransferRestrict {
     ///
     /// Emits [`UserAllowed`].
     fn allow_user(e: &Env, token: Address, user: Address) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         set_user_allowed(e, &token, &user);
         UserAllowed { token, user }.publish(e);
     }
@@ -77,7 +77,7 @@ pub trait TransferRestrict {
     ///
     /// Emits [`UserDisallowed`].
     fn disallow_user(e: &Env, token: Address, user: Address) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         remove_user_allowed(e, &token, &user);
         UserDisallowed { token, user }.publish(e);
     }
@@ -98,7 +98,7 @@ pub trait TransferRestrict {
     ///
     /// Emits [`UserAllowed`] for each user added.
     fn batch_allow_users(e: &Env, token: Address, users: Vec<Address>) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         for user in users.iter() {
             set_user_allowed(e, &token, &user);
             UserAllowed { token: token.clone(), user }.publish(e);
@@ -121,7 +121,7 @@ pub trait TransferRestrict {
     ///
     /// Emits [`UserDisallowed`] for each user removed.
     fn batch_disallow_users(e: &Env, token: Address, users: Vec<Address>) {
-        require_compliance_auth(e);
+        get_compliance_address(e).require_auth();
         for user in users.iter() {
             remove_user_allowed(e, &token, &user);
             UserDisallowed { token: token.clone(), user }.publish(e);
