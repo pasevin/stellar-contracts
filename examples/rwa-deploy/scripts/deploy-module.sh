@@ -57,12 +57,17 @@ TOKEN=$(read_addr "['contracts']['token']")
 IRS=$(read_addr "['contracts']['irs']")
 COMPLIANCE=$(read_addr "['contracts']['compliance']")
 
+require_contract_id "token" "$TOKEN"
+require_contract_id "irs" "$IRS"
+require_contract_id "compliance" "$COMPLIANCE"
+
 # ── Step 1: Deploy ──
 echo "=== Deploying $MODULE ==="
 MODULE_ADDR=$(stellar contract deploy \
   --wasm "$WASM_PATH" \
   --source "$SOURCE" --network "$NETWORK" \
   -- --admin "$ADMIN")
+require_contract_id "$MODULE" "$MODULE_ADDR"
 echo "  Address: $MODULE_ADDR"
 
 # ── Step 2: Configure (before compliance bind) ──

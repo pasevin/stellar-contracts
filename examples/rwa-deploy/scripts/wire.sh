@@ -37,6 +37,15 @@ TIME_TRANSFERS=$(read_addr "['modules']['time_transfers_limits']")
 SUPPLY_LIMIT=$(read_addr "['modules']['supply_limit']")
 INITIAL_LOCKUP=$(read_addr "['modules']['initial_lockup_period']")
 
+require_contract_id "compliance" "$COMPLIANCE"
+require_contract_id "country_allow" "$COUNTRY_ALLOW"
+require_contract_id "country_restrict" "$COUNTRY_RESTRICT"
+require_contract_id "max_balance" "$MAX_BALANCE"
+require_contract_id "transfer_restrict" "$TRANSFER_RESTRICT"
+require_contract_id "time_transfers_limits" "$TIME_TRANSFERS"
+require_contract_id "supply_limit" "$SUPPLY_LIMIT"
+require_contract_id "initial_lockup_period" "$INITIAL_LOCKUP"
+
 echo "=== Wiring Modules to Compliance Hooks ==="
 echo ""
 

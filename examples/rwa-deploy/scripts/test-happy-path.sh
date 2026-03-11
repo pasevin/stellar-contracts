@@ -28,6 +28,9 @@ ADMIN=$(read_addr "['admin']")
 TOKEN=$(read_addr "['contracts']['token']")
 IRS=$(read_addr "['contracts']['irs']")
 
+require_contract_id "token" "$TOKEN"
+require_contract_id "irs" "$IRS"
+
 INVESTOR="$ADMIN"
 
 invoke_with_retry() {

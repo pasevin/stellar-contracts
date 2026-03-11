@@ -58,6 +58,16 @@ load_addresses() {
   SUPPLY_LIMIT=$(read_addr "['modules']['supply_limit']")
   TIME_TRANSFERS=$(read_addr "['modules']['time_transfers_limits']")
   TRANSFER_RESTRICT=$(read_addr "['modules']['transfer_restrict']")
+
+  require_contract_id "token" "$TOKEN"
+  require_contract_id "irs" "$IRS"
+  require_contract_id "country_allow" "$COUNTRY_ALLOW"
+  require_contract_id "country_restrict" "$COUNTRY_RESTRICT"
+  require_contract_id "initial_lockup_period" "$INITIAL_LOCKUP"
+  require_contract_id "max_balance" "$MAX_BALANCE"
+  require_contract_id "supply_limit" "$SUPPLY_LIMIT"
+  require_contract_id "time_transfers_limits" "$TIME_TRANSFERS"
+  require_contract_id "transfer_restrict" "$TRANSFER_RESTRICT"
 }
 
 register_test_identity() {

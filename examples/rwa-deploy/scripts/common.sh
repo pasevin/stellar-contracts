@@ -17,14 +17,41 @@ retryable_invoke_error() {
   esac
 }
 
+is_contract_id() {
+  case "$1" in
+    C[A-Z0-9]*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+require_contract_id() {
+  local label=$1
+  local contract_id=$2
+
+  if ! is_contract_id "$contract_id"; then
+    echo "ERROR: Missing or invalid $label contract id: '$contract_id'" >&2
+    return 1
+  fi
+}
+
 invoke() {
-  stellar contract invoke --id "$1" \
+  local contract_id=$1
+  require_contract_id "invoke target" "$contract_id" || return 1
+
+  stellar contract invoke --id "$contract_id" \
     --source "$SOURCE" --network "$NETWORK" \
     -- "${@:2}"
 }
 
 invoke_readonly() {
-  stellar contract invoke --id "$1" \
+  local contract_id=$1
+  require_contract_id "readonly invoke target" "$contract_id" || return 1
+
+  stellar contract invoke --id "$contract_id" \
     --source-account "$ADMIN" --network "$NETWORK" \
     -- "${@:2}"
 }

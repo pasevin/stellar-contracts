@@ -45,11 +45,43 @@ ADMIN=$(stellar keys address "$SOURCE")
 
 deploy_contract() {
   local LABEL=$1; shift
+  local attempts=${STELLAR_DEPLOY_RETRIES:-4}
+  local delay=${STELLAR_DEPLOY_RETRY_DELAY_SECONDS:-3}
+  local attempt output status addr
+
   echo "--- Deploying $LABEL ---" >&2
-  local ADDR
-  ADDR=$(stellar contract deploy "$@")
-  echo "  $LABEL: $ADDR" >&2
-  echo "$ADDR"
+
+  for attempt in $(seq 1 "$attempts"); do
+    if output=$(stellar contract deploy "$@" 2>&1); then
+      printf '%s\n' "$output" >&2
+      addr=$(printf '%s\n' "$output" | awk 'NF { line = $0 } END { print line }')
+
+      if require_contract_id "$LABEL" "$addr"; then
+        echo "  $LABEL: $addr" >&2
+        echo "$addr"
+        return 0
+      fi
+
+      output="${output}
+ERROR: deploy returned an empty or invalid contract id for $LABEL"
+      status=1
+    else
+      status=$?
+    fi
+
+    if ! retryable_invoke_error "$output"; then
+      printf '%s\n' "$output" >&2
+      return "$status"
+    fi
+
+    if [ "$attempt" -eq "$attempts" ]; then
+      printf '%s\n' "$output" >&2
+      return "$status"
+    fi
+
+    echo "Retrying $LABEL deploy after transient Stellar CLI failure..." >&2
+    sleep $((delay * attempt))
+  done
 }
 
 invoke_with_retry() {
@@ -149,13 +181,11 @@ deploy_module() {
     echo "ERROR: $WASM_NAME not found — run build.sh first" >&2
     return 1
   fi
-  local ADDR
-  ADDR=$(stellar contract deploy \
+
+  deploy_contract "$NAME" \
     --wasm "$WASM_DIR/$WASM_NAME" \
     --source "$SOURCE" --network "$NETWORK" \
-    -- --admin "$ADMIN")
-  echo "  $NAME: $ADDR" >&2
-  echo "$ADDR"
+    -- --admin "$ADMIN"
 }
 
 COUNTRY_ALLOW=$(deploy_module country-allow)
