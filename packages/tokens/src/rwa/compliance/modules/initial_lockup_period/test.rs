@@ -14,6 +14,9 @@ use crate::rwa::{
     compliance::{Compliance, ComplianceHook},
     compliance::modules::common::{
         hooks_verified, set_compliance_address, ComplianceModuleStorageKey,
+<<<<<<< HEAD
+>>>>>>> 9dcba2fe (refactor(rwa): move transfer modules under compliance)
+=======
 >>>>>>> 9dcba2fe (refactor(rwa): move transfer modules under compliance)
     },
     utils::token_binder::TokenBinder,

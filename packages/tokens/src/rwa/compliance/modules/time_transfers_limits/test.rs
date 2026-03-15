@@ -2,7 +2,11 @@ extern crate std;
 
 use soroban_sdk::{
 <<<<<<< HEAD
+<<<<<<< HEAD
     contract, contractimpl, contracttype, testutils::Address as _, Address, Env, Val, Vec,
+=======
+    contract, contractimpl, contracttype, testutils::Address as _, Address, Env, Vec,
+>>>>>>> 9dcba2fe (refactor(rwa): move transfer modules under compliance)
 =======
     contract, contractimpl, contracttype, testutils::Address as _, Address, Env, Vec,
 >>>>>>> 9dcba2fe (refactor(rwa): move transfer modules under compliance)
@@ -21,6 +25,9 @@ use crate::rwa::{
     compliance::modules::common::{
         hooks_verified, set_compliance_address, set_irs_address, ComplianceModuleStorageKey,
         IRSRead,
+<<<<<<< HEAD
+>>>>>>> 9dcba2fe (refactor(rwa): move transfer modules under compliance)
+=======
 >>>>>>> 9dcba2fe (refactor(rwa): move transfer modules under compliance)
     },
     identity_registry_storage::{CountryDataManager, IdentityRegistryStorage},
