@@ -13,7 +13,7 @@ use soroban_sdk::{
 };
 use stellar_tokens::rwa::{
     compliance::{ComplianceHook, ComplianceModuleClient},
-    compliance_modules::time_transfers_limits::Limit,
+    compliance::modules::time_transfers_limits::Limit,
     identity_registry_storage::{CountryData, CountryRelation, IndividualCountryRelation},
 };
 
