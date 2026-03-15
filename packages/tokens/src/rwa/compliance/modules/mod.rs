@@ -11,6 +11,8 @@ mod test;
 pub mod time_transfers_limits;
 pub mod transfer_restrict;
 
+pub mod common;
+
 /// Trait for compliance modules that can be registered with the modular
 /// compliance system.
 ///
