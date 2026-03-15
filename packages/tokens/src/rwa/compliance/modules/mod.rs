@@ -17,6 +17,8 @@ pub mod country_restrict;
 pub mod max_balance;
 pub mod supply_limit;
 
+pub mod common;
+
 /// Trait for compliance modules that can be registered with the modular
 /// compliance system.
 ///
