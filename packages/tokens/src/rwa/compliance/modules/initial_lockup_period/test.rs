@@ -1,13 +1,15 @@
 extern crate std;
 
 use soroban_sdk::{
-    contract, contractimpl, contracttype, testutils::Address as _, vec, Address, Env, Symbol,
+    contract, contractimpl, contracttype, testutils::Address as _, vec, Address, Env,
 };
 
 use super::*;
 use crate::rwa::{
     compliance::{Compliance, ComplianceHook},
-    compliance_modules::common::{hooks_verified, set_compliance_address},
+    compliance::modules::common::{
+        hooks_verified, set_compliance_address, ComplianceModuleStorageKey,
+    },
     utils::token_binder::TokenBinder,
 };
 
@@ -22,7 +24,7 @@ impl InitialLockupPeriod for TestInitialLockupPeriodContract {
 }
 
 fn arm_hooks(e: &Env) {
-    e.storage().persistent().set(&Symbol::new(e, "hooks_verified"), &true);
+    e.storage().instance().set(&ComplianceModuleStorageKey::HooksVerified, &true);
 }
 
 #[contract]

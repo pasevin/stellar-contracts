@@ -1,14 +1,15 @@
 extern crate std;
 
 use soroban_sdk::{
-    contract, contractimpl, contracttype, testutils::Address as _, Address, Env, Symbol, Vec,
+    contract, contractimpl, contracttype, testutils::Address as _, Address, Env, Vec,
 };
 
 use super::*;
 use crate::rwa::{
     compliance::{Compliance, ComplianceHook},
-    compliance_modules::common::{
-        hooks_verified, set_compliance_address, set_irs_address, IRSRead,
+    compliance::modules::common::{
+        hooks_verified, set_compliance_address, set_irs_address, ComplianceModuleStorageKey,
+        IRSRead,
     },
     identity_registry_storage::CountryData,
     utils::token_binder::TokenBinder,
@@ -131,7 +132,7 @@ impl TimeTransfersLimits for TestTimeTransfersLimitsContract {
 }
 
 fn arm_hooks(e: &Env) {
-    e.storage().persistent().set(&Symbol::new(e, "hooks_verified"), &true);
+    e.storage().instance().set(&ComplianceModuleStorageKey::HooksVerified, &true);
 }
 
 #[test]
@@ -167,6 +168,7 @@ fn pre_set_transfer_counter_blocks_transfers_within_active_window() {
     let sender = Address::generate(&e);
     let sender_identity = Address::generate(&e);
     let recipient = Address::generate(&e);
+    let client = TestTimeTransfersLimitsContractClient::new(&e, &module_id);
 
     irs.set_identity(&sender, &sender_identity);
 
@@ -174,31 +176,18 @@ fn pre_set_transfer_counter_blocks_transfers_within_active_window() {
         set_compliance_address(&e, &compliance);
         set_irs_address(&e, &token, &irs_id);
         arm_hooks(&e);
-
-        <TestTimeTransfersLimitsContract as TimeTransfersLimits>::set_time_transfer_limit(
-            &e,
-            token.clone(),
-            Limit { limit_time: 60, limit_value: 100 },
-        );
-        <TestTimeTransfersLimitsContract as TimeTransfersLimits>::pre_set_transfer_counter(
-            &e,
-            token.clone(),
-            sender_identity.clone(),
-            60,
-            TransferCounter { value: 90, timer: e.ledger().timestamp().saturating_add(60) },
-        );
-
-        assert!(!<TestTimeTransfersLimitsContract as TimeTransfersLimits>::can_transfer(
-            &e,
-            sender.clone(),
-            recipient.clone(),
-            11,
-            token.clone(),
-        ));
-        assert!(<TestTimeTransfersLimitsContract as TimeTransfersLimits>::can_transfer(
-            &e, sender, recipient, 10, token,
-        ));
     });
+
+    client.set_time_transfer_limit(&token, &Limit { limit_time: 60, limit_value: 100 });
+    client.pre_set_transfer_counter(
+        &token,
+        &sender_identity,
+        &60,
+        &TransferCounter { value: 90, timer: e.ledger().timestamp().saturating_add(60) },
+    );
+
+    assert!(!client.can_transfer(&sender.clone(), &recipient.clone(), &11, &token));
+    assert!(client.can_transfer(&sender, &recipient, &10, &token));
 }
 
 #[test]
@@ -210,22 +199,15 @@ fn set_time_transfer_limit_rejects_more_than_four_limits() {
     let module_id = e.register(TestTimeTransfersLimitsContract, ());
     let compliance = Address::generate(&e);
     let token = Address::generate(&e);
+    let client = TestTimeTransfersLimitsContractClient::new(&e, &module_id);
 
     e.as_contract(&module_id, || {
         set_compliance_address(&e, &compliance);
-
-        for limit_time in [60_u64, 120, 180, 240] {
-            <TestTimeTransfersLimitsContract as TimeTransfersLimits>::set_time_transfer_limit(
-                &e,
-                token.clone(),
-                Limit { limit_time, limit_value: 100 },
-            );
-        }
-
-        <TestTimeTransfersLimitsContract as TimeTransfersLimits>::set_time_transfer_limit(
-            &e,
-            token,
-            Limit { limit_time: 300, limit_value: 100 },
-        );
     });
+
+    for limit_time in [60_u64, 120, 180, 240] {
+        client.set_time_transfer_limit(&token, &Limit { limit_time, limit_value: 100 });
+    }
+
+    client.set_time_transfer_limit(&token, &Limit { limit_time: 300, limit_value: 100 });
 }
