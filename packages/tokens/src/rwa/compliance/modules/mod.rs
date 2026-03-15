@@ -3,6 +3,8 @@ use soroban_sdk::{contracterror, contracttrait, Address, Env, String};
 pub mod country_allow;
 pub mod country_restrict;
 pub mod storage;
+pub mod max_balance;
+pub mod supply_limit;
 #[cfg(test)]
 mod test;
 

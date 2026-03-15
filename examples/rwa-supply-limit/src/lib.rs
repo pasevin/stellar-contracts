@@ -3,7 +3,7 @@
 use soroban_sdk::{contract, contractimpl, contracttype, vec, Address, Env, String, Vec};
 use stellar_tokens::rwa::{
     compliance::ComplianceHook,
-    compliance_modules::{
+    compliance::modules::{
         common::{
             add_i128_or_panic, set_compliance_address, sub_i128_or_panic, verify_required_hooks,
             ComplianceModuleStorageKey,
@@ -54,14 +54,14 @@ impl SupplyLimitContract {
 impl SupplyLimit for SupplyLimitContract {
     fn set_supply_limit(e: &Env, token: Address, limit: i128) {
         require_module_admin_or_compliance_auth(e);
-        stellar_tokens::rwa::compliance_modules::common::require_non_negative_amount(e, limit);
+        stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(e, limit);
         set_supply_limit(e, &token, limit);
         SupplyLimitSet { token, limit }.publish(e);
     }
 
     fn pre_set_internal_supply(e: &Env, token: Address, supply: i128) {
         require_module_admin_or_compliance_auth(e);
-        stellar_tokens::rwa::compliance_modules::common::require_non_negative_amount(e, supply);
+        stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(e, supply);
         set_internal_supply(e, &token, supply);
     }
 
@@ -83,14 +83,14 @@ impl SupplyLimit for SupplyLimitContract {
 
     fn on_created(e: &Env, _to: Address, amount: i128, token: Address) {
         require_module_admin_or_compliance_auth(e);
-        stellar_tokens::rwa::compliance_modules::common::require_non_negative_amount(e, amount);
+        stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(e, amount);
         let current = get_internal_supply(e, &token);
         set_internal_supply(e, &token, add_i128_or_panic(e, current, amount));
     }
 
     fn on_destroyed(e: &Env, _from: Address, amount: i128, token: Address) {
         require_module_admin_or_compliance_auth(e);
-        stellar_tokens::rwa::compliance_modules::common::require_non_negative_amount(e, amount);
+        stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(e, amount);
         let current = get_internal_supply(e, &token);
         set_internal_supply(e, &token, sub_i128_or_panic(e, current, amount));
     }

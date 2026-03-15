@@ -3,7 +3,7 @@
 use soroban_sdk::{contract, contractimpl, contracttype, vec, Address, Env, String, Vec};
 use stellar_tokens::rwa::{
     compliance::ComplianceHook,
-    compliance_modules::{
+    compliance::modules::{
         common::{
             add_i128_or_panic, get_irs_client, set_compliance_address, set_irs_address,
             sub_i128_or_panic, verify_required_hooks, ComplianceModuleStorageKey,
@@ -57,14 +57,14 @@ impl MaxBalance for MaxBalanceContract {
 
     fn set_max_balance(e: &Env, token: Address, max: i128) {
         require_module_admin_or_compliance_auth(e);
-        stellar_tokens::rwa::compliance_modules::common::require_non_negative_amount(e, max);
+        stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(e, max);
         set_max_balance(e, &token, max);
         MaxBalanceSet { token, max_balance: max }.publish(e);
     }
 
     fn pre_set_module_state(e: &Env, token: Address, identity: Address, balance: i128) {
         require_module_admin_or_compliance_auth(e);
-        stellar_tokens::rwa::compliance_modules::common::require_non_negative_amount(e, balance);
+        stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(e, balance);
         set_id_balance(e, &token, &identity, balance);
         IDBalancePreSet { token, identity, balance }.publish(e);
     }
@@ -83,7 +83,7 @@ impl MaxBalance for MaxBalanceContract {
         for i in 0..identities.len() {
             let id = identities.get(i).unwrap();
             let bal = balances.get(i).unwrap();
-            stellar_tokens::rwa::compliance_modules::common::require_non_negative_amount(e, bal);
+            stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(e, bal);
             set_id_balance(e, &token, &id, bal);
             IDBalancePreSet { token: token.clone(), identity: id, balance: bal }.publish(e);
         }
@@ -106,7 +106,7 @@ impl MaxBalance for MaxBalanceContract {
 
     fn on_transfer(e: &Env, from: Address, to: Address, amount: i128, token: Address) {
         require_module_admin_or_compliance_auth(e);
-        stellar_tokens::rwa::compliance_modules::common::require_non_negative_amount(e, amount);
+        stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(e, amount);
 
         let irs = get_irs_client(e, &token);
         let from_id = irs.stored_identity(&from);
@@ -132,7 +132,7 @@ impl MaxBalance for MaxBalanceContract {
 
     fn on_created(e: &Env, to: Address, amount: i128, token: Address) {
         require_module_admin_or_compliance_auth(e);
-        stellar_tokens::rwa::compliance_modules::common::require_non_negative_amount(e, amount);
+        stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(e, amount);
 
         let irs = get_irs_client(e, &token);
         let to_id = irs.stored_identity(&to);
@@ -151,7 +151,7 @@ impl MaxBalance for MaxBalanceContract {
 
     fn on_destroyed(e: &Env, from: Address, amount: i128, token: Address) {
         require_module_admin_or_compliance_auth(e);
-        stellar_tokens::rwa::compliance_modules::common::require_non_negative_amount(e, amount);
+        stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(e, amount);
 
         let irs = get_irs_client(e, &token);
         let from_id = irs.stored_identity(&from);

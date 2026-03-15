@@ -1,7 +1,7 @@
 extern crate std;
 
 use soroban_sdk::{
-    contract, contractimpl, contracttype, testutils::Address as _, Address, Env, Symbol, Vec,
+    contract, contractimpl, contracttype, testutils::Address as _, Address, Env, Vec,
 };
 
 use super::{
@@ -10,8 +10,9 @@ use super::{
 };
 use crate::rwa::{
     compliance::{Compliance, ComplianceHook},
-    compliance_modules::common::{
-        hooks_verified, set_compliance_address, set_irs_address, IRSRead,
+    compliance::modules::common::{
+        hooks_verified, set_compliance_address, set_irs_address, ComplianceModuleStorageKey,
+        IRSRead,
     },
     identity_registry_storage::CountryData,
     utils::token_binder::TokenBinder,
@@ -134,7 +135,7 @@ impl MaxBalance for TestMaxBalanceContract {
 }
 
 fn arm_hooks(e: &Env) {
-    e.storage().persistent().set(&Symbol::new(e, "hooks_verified"), &true);
+    e.storage().instance().set(&ComplianceModuleStorageKey::HooksVerified, &true);
 }
 
 #[test]

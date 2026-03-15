@@ -1,13 +1,15 @@
 extern crate std;
 
 use soroban_sdk::{
-    contract, contractimpl, contracttype, testutils::Address as _, Address, Env, Symbol,
+    contract, contractimpl, contracttype, testutils::Address as _, Address, Env,
 };
 
 use super::*;
 use crate::rwa::{
     compliance::{Compliance, ComplianceHook},
-    compliance_modules::common::{hooks_verified, set_compliance_address},
+    compliance::modules::common::{
+        hooks_verified, set_compliance_address, ComplianceModuleStorageKey,
+    },
     utils::token_binder::TokenBinder,
 };
 
@@ -98,7 +100,7 @@ impl SupplyLimit for TestSupplyLimitContract {
 }
 
 fn arm_hooks(e: &Env) {
-    e.storage().persistent().set(&Symbol::new(e, "hooks_verified"), &true);
+    e.storage().instance().set(&ComplianceModuleStorageKey::HooksVerified, &true);
 }
 
 #[test]
@@ -166,54 +168,24 @@ fn hooks_update_internal_supply_and_cap_future_mints() {
     let compliance_id = e.register(MockComplianceContract, ());
     let token = Address::generate(&e);
     let recipient = Address::generate(&e);
+    let client = TestSupplyLimitContractClient::new(&e, &module_id);
 
     e.as_contract(&module_id, || {
         set_compliance_address(&e, &compliance_id);
         arm_hooks(&e);
-
-        <TestSupplyLimitContract as SupplyLimit>::set_supply_limit(&e, token.clone(), 100);
-
-        assert!(<TestSupplyLimitContract as SupplyLimit>::can_create(
-            &e,
-            recipient.clone(),
-            80,
-            token.clone(),
-        ));
-        <TestSupplyLimitContract as SupplyLimit>::on_created(
-            &e,
-            recipient.clone(),
-            80,
-            token.clone(),
-        );
-        assert_eq!(
-            <TestSupplyLimitContract as SupplyLimit>::get_internal_supply(&e, token.clone()),
-            80
-        );
-
-        assert!(!<TestSupplyLimitContract as SupplyLimit>::can_create(
-            &e,
-            recipient.clone(),
-            30,
-            token.clone(),
-        ));
-
-        <TestSupplyLimitContract as SupplyLimit>::on_destroyed(
-            &e,
-            recipient.clone(),
-            20,
-            token.clone(),
-        );
-        assert_eq!(
-            <TestSupplyLimitContract as SupplyLimit>::get_internal_supply(&e, token.clone()),
-            60
-        );
-        assert!(<TestSupplyLimitContract as SupplyLimit>::can_create(
-            &e,
-            recipient,
-            40,
-            token.clone(),
-        ));
     });
+
+    client.set_supply_limit(&token, &100);
+
+    assert!(client.can_create(&recipient.clone(), &80, &token));
+    client.on_created(&recipient.clone(), &80, &token);
+    assert_eq!(client.get_internal_supply(&token), 80);
+
+    assert!(!client.can_create(&recipient.clone(), &30, &token));
+
+    client.on_destroyed(&recipient.clone(), &20, &token);
+    assert_eq!(client.get_internal_supply(&token), 60);
+    assert!(client.can_create(&recipient, &40, &token));
 }
 
 #[test]
@@ -225,29 +197,17 @@ fn pre_set_internal_supply_seeds_existing_supply_for_cap_checks() {
     let compliance_id = e.register(MockComplianceContract, ());
     let token = Address::generate(&e);
     let recipient = Address::generate(&e);
+    let client = TestSupplyLimitContractClient::new(&e, &module_id);
 
     e.as_contract(&module_id, || {
         set_compliance_address(&e, &compliance_id);
         arm_hooks(&e);
-
-        <TestSupplyLimitContract as SupplyLimit>::set_supply_limit(&e, token.clone(), 100);
-        <TestSupplyLimitContract as SupplyLimit>::pre_set_internal_supply(&e, token.clone(), 90);
-
-        assert_eq!(
-            <TestSupplyLimitContract as SupplyLimit>::get_internal_supply(&e, token.clone()),
-            90
-        );
-        assert!(!<TestSupplyLimitContract as SupplyLimit>::can_create(
-            &e,
-            recipient.clone(),
-            11,
-            token.clone(),
-        ));
-        assert!(<TestSupplyLimitContract as SupplyLimit>::can_create(
-            &e,
-            recipient,
-            10,
-            token.clone(),
-        ));
     });
+
+    client.set_supply_limit(&token, &100);
+    client.pre_set_internal_supply(&token, &90);
+
+    assert_eq!(client.get_internal_supply(&token), 90);
+    assert!(!client.can_create(&recipient.clone(), &11, &token));
+    assert!(client.can_create(&recipient, &10, &token));
 }
