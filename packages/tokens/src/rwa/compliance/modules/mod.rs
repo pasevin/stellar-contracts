@@ -8,6 +8,8 @@ pub mod supply_limit;
 #[cfg(test)]
 mod test;
 
+pub mod common;
+
 /// Trait for compliance modules that can be registered with the modular
 /// compliance system.
 ///
