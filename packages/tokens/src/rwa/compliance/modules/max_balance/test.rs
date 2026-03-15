@@ -9,10 +9,12 @@ use super::{
     *,
 };
 use crate::rwa::{
-    compliance::{Compliance, ComplianceHook},
-    compliance::modules::common::{
-        hooks_verified, set_compliance_address, set_irs_address, ComplianceModuleStorageKey,
-        IRSRead,
+    compliance::{
+        modules::common::{
+            hooks_verified, set_compliance_address, set_irs_address, ComplianceModuleStorageKey,
+            IRSRead,
+        },
+        Compliance, ComplianceHook,
     },
     identity_registry_storage::CountryData,
     utils::token_binder::TokenBinder,

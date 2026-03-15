@@ -1,14 +1,12 @@
 extern crate std;
 
-use soroban_sdk::{
-    contract, contractimpl, contracttype, testutils::Address as _, Address, Env,
-};
+use soroban_sdk::{contract, contractimpl, contracttype, testutils::Address as _, Address, Env};
 
 use super::*;
 use crate::rwa::{
-    compliance::{Compliance, ComplianceHook},
-    compliance::modules::common::{
-        hooks_verified, set_compliance_address, ComplianceModuleStorageKey,
+    compliance::{
+        modules::common::{hooks_verified, set_compliance_address, ComplianceModuleStorageKey},
+        Compliance, ComplianceHook,
     },
     utils::token_binder::TokenBinder,
 };
