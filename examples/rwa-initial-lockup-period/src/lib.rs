@@ -1,9 +1,8 @@
 #![no_std]
 
 use soroban_sdk::{contract, contractimpl, contracttype, vec, Address, Env, String, Vec};
-use stellar_tokens::rwa::{
-    compliance::ComplianceHook,
-    compliance::modules::{
+use stellar_tokens::rwa::compliance::{
+    modules::{
         common::{
             add_i128_or_panic, set_compliance_address, sub_i128_or_panic, verify_required_hooks,
             ComplianceModuleStorageKey,
@@ -16,6 +15,7 @@ use stellar_tokens::rwa::{
             InitialLockupPeriod, LockedTokens, LockupPeriodSet,
         },
     },
+    ComplianceHook,
 };
 
 #[contracttype]

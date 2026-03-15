@@ -3,9 +3,8 @@
 use soroban_sdk::{
     contract, contractimpl, contracttype, panic_with_error, vec, Address, Env, String, Vec,
 };
-use stellar_tokens::rwa::{
-    compliance::{ComplianceHook, ComplianceModuleError},
-    compliance::modules::{
+use stellar_tokens::rwa::compliance::{
+    modules::{
         common::{
             add_i128_or_panic, get_irs_client, set_compliance_address, set_irs_address,
             verify_required_hooks, ComplianceModuleStorageKey,
@@ -16,6 +15,7 @@ use stellar_tokens::rwa::{
             TransferCounter,
         },
     },
+    ComplianceHook, ComplianceModuleError,
 };
 
 const MAX_LIMITS_PER_TOKEN: u32 = 4;
