@@ -16,6 +16,8 @@ pub mod country_allow;
 pub mod country_restrict;
 
 pub mod common;
+pub mod country_allow;
+pub mod country_restrict;
 
 /// Trait for compliance modules that can be registered with the modular
 /// compliance system.
