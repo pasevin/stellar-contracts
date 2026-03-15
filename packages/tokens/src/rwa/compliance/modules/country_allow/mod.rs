@@ -232,7 +232,7 @@ mod test {
 
     use super::*;
     use crate::rwa::{
-        compliance_modules::common::IRSRead,
+        compliance::modules::common::IRSRead,
         identity_registry_storage::{
             CountryData, CountryRelation, IndividualCountryRelation, OrganizationCountryRelation,
         },
