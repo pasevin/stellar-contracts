@@ -1,6 +1,5 @@
 #![no_std]
 
-<<<<<<< HEAD
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Vec};
 use stellar_tokens::rwa::compliance::modules::{
     storage::{set_compliance_address, ComplianceModuleStorageKey},
@@ -14,15 +13,10 @@ use stellar_tokens::rwa::compliance::modules::{
 enum DataKey {
     Admin,
 }
-=======
-use soroban_sdk::{contract, contractimpl, Address, String, Vec};
-use stellar_tokens::rwa::compliance_modules::transfer_restrict::TransferRestrict;
->>>>>>> 08d06e29 (feat(rwa): add transfer_restrict, time_transfers_limits, and initial_lockup_period modules)
 
 #[contract]
 pub struct TransferRestrictContract;
 
-<<<<<<< HEAD
 fn set_admin(e: &Env, admin: &Address) {
     e.storage().instance().set(&DataKey::Admin, admin);
 }
@@ -87,7 +81,3 @@ impl TransferRestrict for TransferRestrictContract {
         set_compliance_address(e, &compliance);
     }
 }
-=======
-#[contractimpl(contracttrait)]
-impl TransferRestrict for TransferRestrictContract {}
->>>>>>> 08d06e29 (feat(rwa): add transfer_restrict, time_transfers_limits, and initial_lockup_period modules)
