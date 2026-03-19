@@ -12,40 +12,13 @@ pub mod time_transfers_limits;
 pub mod transfer_restrict;
 
 pub mod common;
-<<<<<<< HEAD
-=======
-
-pub mod common;
 pub mod country_allow;
 pub mod country_restrict;
-<<<<<<< HEAD
-
-pub mod common;
->>>>>>> 86304f0a (refactor(rwa): move transfer modules under compliance)
-pub mod country_allow;
-pub mod country_restrict;
-=======
->>>>>>> 9dcba2fe (refactor(rwa): move transfer modules under compliance)
 pub mod initial_lockup_period;
 pub mod max_balance;
 pub mod supply_limit;
 pub mod time_transfers_limits;
 pub mod transfer_restrict;
-<<<<<<< HEAD
-
-<<<<<<< HEAD
-=======
-pub mod common;
-pub mod country_allow;
-pub mod country_restrict;
-
-pub mod common;
-pub mod country_allow;
-pub mod country_restrict;
-=======
->>>>>>> 9dcba2fe (refactor(rwa): move transfer modules under compliance)
-
->>>>>>> 86304f0a (refactor(rwa): move transfer modules under compliance)
 /// Trait for compliance modules that can be registered with the modular
 /// compliance system.
 ///
