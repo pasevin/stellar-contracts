@@ -1526,6 +1526,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "rwa-claim-issuer-example"
+version = "0.6.0"
+dependencies = [
+ "ed25519-dalek",
+ "soroban-sdk",
+ "stellar-access",
+ "stellar-macros",
+ "stellar-tokens",
+]
+
+[[package]]
+name = "rwa-claim-topics-and-issuers-example"
+version = "0.6.0"
+dependencies = [
+ "soroban-sdk",
+ "stellar-access",
+ "stellar-macros",
+ "stellar-tokens",
+]
+
+[[package]]
+name = "rwa-compliance-example"
+version = "0.6.0"
+dependencies = [
+ "soroban-sdk",
+ "stellar-access",
+ "stellar-macros",
+ "stellar-tokens",
+]
+
+[[package]]
 name = "rwa-country-allow"
 version = "0.6.0"
 dependencies = [
@@ -1542,6 +1573,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "rwa-identity-example"
+version = "0.6.0"
+dependencies = [
+ "soroban-sdk",
+ "stellar-access",
+ "stellar-macros",
+ "stellar-tokens",
+]
+
+[[package]]
+name = "rwa-identity-registry-example"
+version = "0.6.0"
+dependencies = [
+ "soroban-sdk",
+ "stellar-access",
+ "stellar-macros",
+ "stellar-tokens",
+]
+
+[[package]]
+name = "rwa-identity-verifier-example"
+version = "0.6.0"
+dependencies = [
+ "soroban-sdk",
+ "stellar-access",
+ "stellar-macros",
+ "stellar-tokens",
+]
+
+[[package]]
 name = "rwa-max-balance"
 version = "0.6.0"
 dependencies = [
@@ -1554,6 +1615,17 @@ name = "rwa-supply-limit"
 version = "0.6.0"
 dependencies = [
  "soroban-sdk",
+ "stellar-tokens",
+]
+
+[[package]]
+name = "rwa-token-example"
+version = "0.6.0"
+dependencies = [
+ "soroban-sdk",
+ "stellar-access",
+ "stellar-contract-utils",
+ "stellar-macros",
  "stellar-tokens",
 ]
 
