@@ -1,6 +1,8 @@
 #![no_std]
 
-use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Symbol, Vec};
+use soroban_sdk::{
+    contract, contractimpl, symbol_short, Address, Env, FromVal, IntoVal, Symbol, Val, Vec,
+};
 use stellar_access::access_control::{self as access_control, AccessControl};
 use stellar_macros::only_role;
 use stellar_tokens::rwa::{
@@ -46,22 +48,24 @@ impl TokenBinder for IdentityRegistryContract {
 
 #[contractimpl]
 impl IdentityRegistryStorage for IdentityRegistryContract {
-    type CountryData = CountryData;
-
     #[only_role(operator, "manager")]
     fn add_identity(
         e: &Env,
         account: Address,
         identity: Address,
-        initial_profiles: Vec<CountryData>,
+        initial_profiles: Vec<Val>,
         operator: Address,
     ) {
+        let country_data = Vec::from_iter(
+            e,
+            initial_profiles.iter().map(|profile| CountryData::from_val(e, &profile)),
+        );
         identity_storage::add_identity(
             e,
             &account,
             &identity,
             IdentityType::Individual,
-            &initial_profiles,
+            &country_data,
         );
     }
 
@@ -92,24 +96,16 @@ impl IdentityRegistryStorage for IdentityRegistryContract {
 #[contractimpl]
 impl CountryDataManager for IdentityRegistryContract {
     #[only_role(operator, "manager")]
-    fn add_country_data_entries(
-        e: &Env,
-        account: Address,
-        profiles: Vec<CountryData>,
-        operator: Address,
-    ) {
-        identity_storage::add_country_data_entries(e, &account, &profiles);
+    fn add_country_data_entries(e: &Env, account: Address, profiles: Vec<Val>, operator: Address) {
+        let country_data =
+            Vec::from_iter(e, profiles.iter().map(|profile| CountryData::from_val(e, &profile)));
+        identity_storage::add_country_data_entries(e, &account, &country_data);
     }
 
     #[only_role(operator, "manager")]
-    fn modify_country_data(
-        e: &Env,
-        account: Address,
-        index: u32,
-        profile: CountryData,
-        operator: Address,
-    ) {
-        identity_storage::modify_country_data(e, &account, index, &profile);
+    fn modify_country_data(e: &Env, account: Address, index: u32, profile: Val, operator: Address) {
+        let country_data = CountryData::from_val(e, &profile);
+        identity_storage::modify_country_data(e, &account, index, &country_data);
     }
 
     #[only_role(operator, "manager")]
@@ -117,12 +113,17 @@ impl CountryDataManager for IdentityRegistryContract {
         identity_storage::delete_country_data(e, &account, index);
     }
 
-    fn get_country_data(e: &Env, account: Address, index: u32) -> CountryData {
-        identity_storage::get_country_data(e, &account, index)
+    fn get_country_data(e: &Env, account: Address, index: u32) -> Val {
+        identity_storage::get_country_data(e, &account, index).into_val(e)
     }
 
-    fn get_country_data_entries(e: &Env, account: Address) -> Vec<CountryData> {
-        identity_storage::get_country_data_entries(e, &account)
+    fn get_country_data_entries(e: &Env, account: Address) -> Vec<Val> {
+        Vec::from_iter(
+            e,
+            identity_storage::get_country_data_entries(e, &account)
+                .iter()
+                .map(|profile| profile.into_val(e)),
+        )
     }
 }
 
