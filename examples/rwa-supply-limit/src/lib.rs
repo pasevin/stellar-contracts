@@ -1,6 +1,5 @@
 #![no_std]
 
-<<<<<<< HEAD
 use soroban_sdk::{contract, contractimpl, contracttype, vec, Address, Env, String, Vec};
 use stellar_tokens::rwa::compliance::{
     modules::{
@@ -22,16 +21,10 @@ use stellar_tokens::rwa::compliance::{
 enum DataKey {
     Admin,
 }
-=======
-use soroban_sdk::{contract, contractimpl, Address, String, Vec};
-use stellar_tokens::rwa::compliance::ComplianceHook;
-use stellar_tokens::rwa::compliance_modules::supply_limit::SupplyLimit;
->>>>>>> 8c5d6fae (feat(rwa): add max_balance and supply_limit compliance modules)
 
 #[contract]
 pub struct SupplyLimitContract;
 
-<<<<<<< HEAD
 fn set_admin(e: &Env, admin: &Address) {
     e.storage().instance().set(&DataKey::Admin, admin);
 }
@@ -107,7 +100,3 @@ impl SupplyLimit for SupplyLimitContract {
         set_compliance_address(e, &compliance);
     }
 }
-=======
-#[contractimpl(contracttrait)]
-impl SupplyLimit for SupplyLimitContract {}
->>>>>>> 8c5d6fae (feat(rwa): add max_balance and supply_limit compliance modules)
