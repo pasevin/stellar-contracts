@@ -1,13 +1,11 @@
 use soroban_sdk::{contracterror, contracttrait, Address, Env, String};
 
 pub mod storage;
+pub mod country_allow;
+pub mod country_restrict;
 
 #[cfg(test)]
 mod test;
-
-pub mod common;
-pub mod country_allow;
-pub mod country_restrict;
 
 /// Trait for compliance modules that can be registered with the modular
 /// compliance system.
