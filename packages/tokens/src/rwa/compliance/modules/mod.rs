@@ -14,10 +14,6 @@ pub mod transfer_restrict;
 pub mod common;
 pub mod country_allow;
 pub mod country_restrict;
-
-pub mod common;
-pub mod country_allow;
-pub mod country_restrict;
 pub mod max_balance;
 pub mod supply_limit;
 
