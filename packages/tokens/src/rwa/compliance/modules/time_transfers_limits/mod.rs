@@ -40,9 +40,7 @@ pub struct TimeTransferLimitRemoved {
     pub limit_time: u64,
 }
 
-// ---------------------------------------------------------------------------
-// Private helpers (not exposed as contract endpoints)
-// ---------------------------------------------------------------------------
+// ################## HELPERS ##################
 
 fn is_counter_finished(e: &Env, token: &Address, identity: &Address, limit_time: u64) -> bool {
     let counter = get_counter(e, token, identity, limit_time);
@@ -67,12 +65,57 @@ fn increase_counters(e: &Env, token: &Address, identity: &Address, value: i128) 
     }
 }
 
-// ---------------------------------------------------------------------------
-// Trait
-// ---------------------------------------------------------------------------
-
 #[contracttrait]
 pub trait TimeTransfersLimits {
+    // ################## QUERY STATE ##################
+
+    fn get_time_transfer_limits(e: &Env, token: Address) -> Vec<Limit> {
+        get_limits(e, &token)
+    }
+
+    fn can_transfer(e: &Env, from: Address, _to: Address, amount: i128, token: Address) -> bool {
+        assert!(
+            hooks_verified(e),
+            "TimeTransfersLimitsModule: not armed — call verify_hook_wiring() after wiring hooks \
+             [CanTransfer, Transferred]"
+        );
+        if amount < 0 {
+            return false;
+        }
+        let irs = get_irs_client(e, &token);
+        let from_id = irs.stored_identity(&from);
+        let limits = get_limits(e, &token);
+
+        for limit in limits.iter() {
+            if amount > limit.limit_value {
+                return false;
+            }
+
+            if !is_counter_finished(e, &token, &from_id, limit.limit_time) {
+                let counter = get_counter(e, &token, &from_id, limit.limit_time);
+                if add_i128_or_panic(e, counter.value, amount) > limit.limit_value {
+                    return false;
+                }
+            }
+        }
+
+        true
+    }
+
+    fn can_create(_e: &Env, _to: Address, _amount: i128, _token: Address) -> bool {
+        true
+    }
+
+    fn name(e: &Env) -> String {
+        module_name(e, "TimeTransfersLimitsModule")
+    }
+
+    fn get_compliance_address(e: &Env) -> Address {
+        get_compliance_address(e)
+    }
+
+    // ################## CHANGE STATE ##################
+
     fn set_identity_registry_storage(e: &Env, token: Address, irs: Address) {
         get_compliance_address(e).require_auth();
         set_irs_address(e, &token, &irs);
@@ -141,10 +184,6 @@ pub trait TimeTransfersLimits {
         }
     }
 
-    fn get_time_transfer_limits(e: &Env, token: Address) -> Vec<Limit> {
-        get_limits(e, &token)
-    }
-
     fn pre_set_transfer_counter(
         e: &Env,
         token: Address,
@@ -171,10 +210,6 @@ pub trait TimeTransfersLimits {
         set_counter(e, &token, &identity, limit_time, &counter);
     }
 
-    fn required_hooks(e: &Env) -> Vec<ComplianceHook> {
-        vec![e, ComplianceHook::CanTransfer, ComplianceHook::Transferred]
-    }
-
     fn verify_hook_wiring(e: &Env) {
         verify_required_hooks(e, Self::required_hooks(e));
     }
@@ -191,49 +226,14 @@ pub trait TimeTransfersLimits {
 
     fn on_destroyed(_e: &Env, _from: Address, _amount: i128, _token: Address) {}
 
-    fn can_transfer(e: &Env, from: Address, _to: Address, amount: i128, token: Address) -> bool {
-        assert!(
-            hooks_verified(e),
-            "TimeTransfersLimitsModule: not armed — call verify_hook_wiring() after wiring hooks \
-             [CanTransfer, Transferred]"
-        );
-        if amount < 0 {
-            return false;
-        }
-        let irs = get_irs_client(e, &token);
-        let from_id = irs.stored_identity(&from);
-        let limits = get_limits(e, &token);
-
-        for limit in limits.iter() {
-            if amount > limit.limit_value {
-                return false;
-            }
-
-            if !is_counter_finished(e, &token, &from_id, limit.limit_time) {
-                let counter = get_counter(e, &token, &from_id, limit.limit_time);
-                if add_i128_or_panic(e, counter.value, amount) > limit.limit_value {
-                    return false;
-                }
-            }
-        }
-
-        true
-    }
-
-    fn can_create(_e: &Env, _to: Address, _amount: i128, _token: Address) -> bool {
-        true
-    }
-
-    fn name(e: &Env) -> String {
-        module_name(e, "TimeTransfersLimitsModule")
-    }
-
-    fn get_compliance_address(e: &Env) -> Address {
-        get_compliance_address(e)
-    }
-
     /// Implementers must gate this entrypoint with bootstrap-admin auth before
     /// delegating to
     /// [`common::set_compliance_address`](super::common::set_compliance_address).
     fn set_compliance_address(e: &Env, compliance: Address);
+
+    // ################## HELPERS ##################
+
+    fn required_hooks(e: &Env) -> Vec<ComplianceHook> {
+        vec![e, ComplianceHook::CanTransfer, ComplianceHook::Transferred]
+    }
 }

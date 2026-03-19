@@ -33,9 +33,7 @@ pub struct LockupPeriodSet {
     pub lockup_seconds: u64,
 }
 
-// ---------------------------------------------------------------------------
-// Private helpers
-// ---------------------------------------------------------------------------
+// ################## HELPERS ##################
 
 fn calculate_unlocked_amount(e: &Env, locks: &Vec<LockedTokens>) -> i128 {
     let now = e.ledger().timestamp();
@@ -90,17 +88,9 @@ fn update_locked_tokens(e: &Env, token: &Address, wallet: &Address, mut amount_t
     set_total_locked(e, token, wallet, sub_i128_or_panic(e, total_locked, consumed_total));
 }
 
-// ---------------------------------------------------------------------------
-// Trait
-// ---------------------------------------------------------------------------
-
 #[contracttrait]
 pub trait InitialLockupPeriod {
-    fn set_lockup_period(e: &Env, token: Address, lockup_seconds: u64) {
-        get_compliance_address(e).require_auth();
-        set_lockup_period(e, &token, lockup_seconds);
-        LockupPeriodSet { token, lockup_seconds }.publish(e);
-    }
+    // ################## QUERY STATE ##################
 
     fn get_lockup_period(e: &Env, token: Address) -> u64 {
         get_lockup_period(e, &token)
@@ -116,6 +106,53 @@ pub trait InitialLockupPeriod {
 
     fn get_internal_balance(e: &Env, token: Address, wallet: Address) -> i128 {
         get_internal_balance(e, &token, &wallet)
+    }
+
+    fn can_transfer(e: &Env, from: Address, _to: Address, amount: i128, token: Address) -> bool {
+        assert!(
+            hooks_verified(e),
+            "InitialLockupPeriodModule: not armed — call verify_hook_wiring() after wiring hooks \
+             [CanTransfer, Created, Transferred, Destroyed]"
+        );
+        if amount < 0 {
+            return false;
+        }
+
+        let total_locked = get_total_locked(e, &token, &from);
+        if total_locked == 0 {
+            return true;
+        }
+
+        let balance = get_internal_balance(e, &token, &from);
+        let free = balance - total_locked;
+
+        if free >= amount {
+            return true;
+        }
+
+        let locks = get_locks(e, &token, &from);
+        let unlocked = calculate_unlocked_amount(e, &locks);
+        (free + unlocked) >= amount
+    }
+
+    fn can_create(_e: &Env, _to: Address, _amount: i128, _token: Address) -> bool {
+        true
+    }
+
+    fn name(e: &Env) -> String {
+        module_name(e, "InitialLockupPeriodModule")
+    }
+
+    fn get_compliance_address(e: &Env) -> Address {
+        get_compliance_address(e)
+    }
+
+    // ################## CHANGE STATE ##################
+
+    fn set_lockup_period(e: &Env, token: Address, lockup_seconds: u64) {
+        get_compliance_address(e).require_auth();
+        set_lockup_period(e, &token, lockup_seconds);
+        LockupPeriodSet { token, lockup_seconds }.publish(e);
     }
 
     fn pre_set_lockup_state(
@@ -137,16 +174,6 @@ pub trait InitialLockupPeriod {
         set_internal_balance(e, &token, &wallet, balance);
         set_locks(e, &token, &wallet, &locks);
         set_total_locked(e, &token, &wallet, total_locked);
-    }
-
-    fn required_hooks(e: &Env) -> Vec<ComplianceHook> {
-        vec![
-            e,
-            ComplianceHook::CanTransfer,
-            ComplianceHook::Created,
-            ComplianceHook::Transferred,
-            ComplianceHook::Destroyed,
-        ]
     }
 
     fn verify_hook_wiring(e: &Env) {
@@ -228,47 +255,20 @@ pub trait InitialLockupPeriod {
         set_internal_balance(e, &token, &from, sub_i128_or_panic(e, current, amount));
     }
 
-    fn can_transfer(e: &Env, from: Address, _to: Address, amount: i128, token: Address) -> bool {
-        assert!(
-            hooks_verified(e),
-            "InitialLockupPeriodModule: not armed — call verify_hook_wiring() after wiring hooks \
-             [CanTransfer, Created, Transferred, Destroyed]"
-        );
-        if amount < 0 {
-            return false;
-        }
-
-        let total_locked = get_total_locked(e, &token, &from);
-        if total_locked == 0 {
-            return true;
-        }
-
-        let balance = get_internal_balance(e, &token, &from);
-        let free = balance - total_locked;
-
-        if free >= amount {
-            return true;
-        }
-
-        let locks = get_locks(e, &token, &from);
-        let unlocked = calculate_unlocked_amount(e, &locks);
-        (free + unlocked) >= amount
-    }
-
-    fn can_create(_e: &Env, _to: Address, _amount: i128, _token: Address) -> bool {
-        true
-    }
-
-    fn name(e: &Env) -> String {
-        module_name(e, "InitialLockupPeriodModule")
-    }
-
-    fn get_compliance_address(e: &Env) -> Address {
-        get_compliance_address(e)
-    }
-
     /// Implementers must gate this entrypoint with bootstrap-admin auth before
     /// delegating to
     /// [`common::set_compliance_address`](super::common::set_compliance_address).
     fn set_compliance_address(e: &Env, compliance: Address);
+
+    // ################## HELPERS ##################
+
+    fn required_hooks(e: &Env) -> Vec<ComplianceHook> {
+        vec![
+            e,
+            ComplianceHook::CanTransfer,
+            ComplianceHook::Created,
+            ComplianceHook::Transferred,
+            ComplianceHook::Destroyed,
+        ]
+    }
 }
