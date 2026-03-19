@@ -59,9 +59,7 @@ impl IdentityRegistryStorage for IdentityRegistryContract {
     ) {
         let country_data = Vec::from_iter(
             e,
-            initial_profiles
-                .iter()
-                .map(|profile| CountryData::from_val(e, &profile)),
+            initial_profiles.iter().map(|profile| CountryData::from_val(e, &profile)),
         );
         identity_storage::add_identity(
             e,
@@ -99,29 +97,14 @@ impl IdentityRegistryStorage for IdentityRegistryContract {
 #[contractimpl]
 impl CountryDataManager for IdentityRegistryContract {
     #[only_role(operator, "manager")]
-    fn add_country_data_entries(
-        e: &Env,
-        account: Address,
-        profiles: Vec<Val>,
-        operator: Address,
-    ) {
-        let country_data = Vec::from_iter(
-            e,
-            profiles
-                .iter()
-                .map(|profile| CountryData::from_val(e, &profile)),
-        );
+    fn add_country_data_entries(e: &Env, account: Address, profiles: Vec<Val>, operator: Address) {
+        let country_data =
+            Vec::from_iter(e, profiles.iter().map(|profile| CountryData::from_val(e, &profile)));
         identity_storage::add_country_data_entries(e, &account, &country_data);
     }
 
     #[only_role(operator, "manager")]
-    fn modify_country_data(
-        e: &Env,
-        account: Address,
-        index: u32,
-        profile: Val,
-        operator: Address,
-    ) {
+    fn modify_country_data(e: &Env, account: Address, index: u32, profile: Val, operator: Address) {
         let country_data = CountryData::from_val(e, &profile);
         identity_storage::modify_country_data(e, &account, index, &country_data);
     }
