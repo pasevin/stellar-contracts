@@ -9,7 +9,7 @@ use rwa_time_transfers_limits::{TimeTransfersLimitsContract, TimeTransfersLimits
 use rwa_transfer_restrict::{TransferRestrictContract, TransferRestrictContractClient};
 use soroban_sdk::{
     testutils::{Address as _, Ledger},
-    vec, Address, Env, String,
+    vec, Address, Env, IntoVal, String,
 };
 use stellar_tokens::rwa::{
     compliance::{modules::time_transfers_limits::Limit, ComplianceHook, ComplianceModuleClient},
@@ -92,7 +92,12 @@ fn setup() -> TestSetup<'static> {
 }
 
 fn register_investor(ts: &TestSetup, investor: &Address, identity: &Address, country: CountryData) {
-    ts.irs_client.add_identity(investor, identity, &vec![&ts.env, country], &ts.manager);
+    ts.irs_client.add_identity(
+        investor,
+        identity,
+        &vec![&ts.env, country.into_val(&ts.env)],
+        &ts.manager,
+    );
 }
 
 fn wire_module(ts: &TestSetup, module_addr: &Address, hooks: &[ComplianceHook]) {
