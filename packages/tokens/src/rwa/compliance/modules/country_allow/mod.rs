@@ -12,7 +12,8 @@ use soroban_sdk::{contractevent, contracttrait, Address, Env, String, Vec};
 use storage::{is_country_allowed, remove_country_allowed, set_country_allowed};
 
 use super::common::{
-    country_code, get_compliance_address, get_irs_client, module_name, set_irs_address,
+    country_code, get_compliance_address, get_irs_country_data_entries, module_name,
+    set_irs_address,
 };
 
 /// Emitted when a country is added to the allowlist.
@@ -183,8 +184,7 @@ pub trait CountryAllow {
     ///
     /// Calls the IRS to resolve country data for `to`.
     fn can_transfer(e: &Env, _from: Address, to: Address, _amount: i128, token: Address) -> bool {
-        let irs = get_irs_client(e, &token);
-        let entries = irs.get_country_data_entries(&to);
+        let entries = get_irs_country_data_entries(e, &token, &to);
         for entry in entries.iter() {
             if is_country_allowed(e, &token, country_code(&entry.country)) {
                 return true;
@@ -227,15 +227,17 @@ mod test {
     extern crate std;
 
     use soroban_sdk::{
-        contract, contractimpl, contracttype, testutils::Address as _, vec, Address, Env, Vec,
+        contract, contractimpl, contracttype, testutils::Address as _, vec, Address, Env, IntoVal,
+        Val, Vec,
     };
 
     use super::*;
     use crate::rwa::{
-        compliance::modules::common::IRSRead,
         identity_registry_storage::{
-            CountryData, CountryRelation, IndividualCountryRelation, OrganizationCountryRelation,
+            CountryData, CountryDataManager, CountryRelation, IdentityRegistryStorage,
+            IndividualCountryRelation, OrganizationCountryRelation,
         },
+        utils::token_binder::TokenBinder,
     };
 
     #[contract]
@@ -244,20 +246,95 @@ mod test {
     #[contracttype]
     #[derive(Clone)]
     enum MockIRSStorageKey {
+        Identity(Address),
         CountryEntries(Address),
     }
 
     #[contractimpl]
-    impl IRSRead for MockIRSContract {
-        fn stored_identity(_e: &Env, account: Address) -> Address {
-            account
+    impl TokenBinder for MockIRSContract {
+        fn linked_tokens(e: &Env) -> Vec<Address> {
+            Vec::new(e)
         }
 
-        fn get_country_data_entries(e: &Env, account: Address) -> Vec<CountryData> {
+        fn bind_token(_e: &Env, _token: Address, _operator: Address) {
+            unreachable!("bind_token is not used in these tests");
+        }
+
+        fn unbind_token(_e: &Env, _token: Address, _operator: Address) {
+            unreachable!("unbind_token is not used in these tests");
+        }
+    }
+
+    #[contractimpl]
+    impl IdentityRegistryStorage for MockIRSContract {
+        fn add_identity(
+            _e: &Env,
+            _account: Address,
+            _identity: Address,
+            _country_data_list: Vec<Val>,
+            _operator: Address,
+        ) {
+            unreachable!("add_identity is not used in these tests");
+        }
+
+        fn remove_identity(_e: &Env, _account: Address, _operator: Address) {
+            unreachable!("remove_identity is not used in these tests");
+        }
+
+        fn modify_identity(_e: &Env, _account: Address, _identity: Address, _operator: Address) {
+            unreachable!("modify_identity is not used in these tests");
+        }
+
+        fn recover_identity(
+            _e: &Env,
+            _old_account: Address,
+            _new_account: Address,
+            _operator: Address,
+        ) {
+            unreachable!("recover_identity is not used in these tests");
+        }
+
+        fn stored_identity(e: &Env, account: Address) -> Address {
             e.storage()
                 .persistent()
+                .get(&MockIRSStorageKey::Identity(account.clone()))
+                .unwrap_or(account)
+        }
+    }
+
+    #[contractimpl]
+    impl CountryDataManager for MockIRSContract {
+        fn add_country_data_entries(
+            _e: &Env,
+            _account: Address,
+            _country_data_list: Vec<Val>,
+            _operator: Address,
+        ) {
+            unreachable!("add_country_data_entries is not used in these tests");
+        }
+
+        fn modify_country_data(
+            _e: &Env,
+            _account: Address,
+            _index: u32,
+            _country_data: Val,
+            _operator: Address,
+        ) {
+            unreachable!("modify_country_data is not used in these tests");
+        }
+
+        fn delete_country_data(_e: &Env, _account: Address, _index: u32, _operator: Address) {
+            unreachable!("delete_country_data is not used in these tests");
+        }
+
+        fn get_country_data_entries(e: &Env, account: Address) -> Vec<Val> {
+            let entries: Vec<CountryData> = e
+                .storage()
+                .persistent()
                 .get(&MockIRSStorageKey::CountryEntries(account))
-                .unwrap_or_else(|| Vec::new(e))
+                .unwrap_or_else(|| Vec::new(e));
+
+            Vec::from_iter(e, entries.iter().map(|entry| entry.into_val(e)))
         }
     }
 
