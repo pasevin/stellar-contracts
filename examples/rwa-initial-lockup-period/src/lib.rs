@@ -1,6 +1,5 @@
 #![no_std]
 
-<<<<<<< HEAD
 use soroban_sdk::{contract, contractimpl, contracttype, vec, Address, Env, String, Vec};
 use stellar_tokens::rwa::compliance::{
     modules::{
@@ -227,16 +226,3 @@ impl InitialLockupPeriod for InitialLockupPeriodContract {
         set_compliance_address(e, &compliance);
     }
 }
-=======
-use soroban_sdk::{contract, contractimpl, Address, String, Vec};
-use stellar_tokens::rwa::compliance::ComplianceHook;
-use stellar_tokens::rwa::compliance_modules::initial_lockup_period::{
-    InitialLockupPeriod, LockedTokens,
-};
-
-#[contract]
-pub struct InitialLockupPeriodContract;
-
-#[contractimpl(contracttrait)]
-impl InitialLockupPeriod for InitialLockupPeriodContract {}
->>>>>>> 08d06e29 (feat(rwa): add transfer_restrict, time_transfers_limits, and initial_lockup_period modules)

@@ -12,7 +12,10 @@ use soroban_sdk::{
     vec, Address, Env, IntoVal, String,
 };
 use stellar_tokens::rwa::{
-    compliance::{modules::time_transfers_limits::Limit, ComplianceHook, ComplianceModuleClient},
+    compliance::{
+        modules::{time_transfers_limits::Limit, ComplianceModuleClient},
+        ComplianceHook,
+    },
     identity_registry_storage::{CountryData, CountryRelation, IndividualCountryRelation},
 };
 
