@@ -1,6 +1,6 @@
 use soroban_sdk::{contracttype, Address, Env};
 
-use crate::rwa::compliance::{MODULE_EXTEND_AMOUNT, MODULE_TTL_THRESHOLD};
+use crate::rwa::compliance::modules::{MODULE_EXTEND_AMOUNT, MODULE_TTL_THRESHOLD};
 
 #[contracttype]
 #[derive(Clone)]

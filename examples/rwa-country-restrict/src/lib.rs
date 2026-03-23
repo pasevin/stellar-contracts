@@ -2,11 +2,11 @@
 
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Vec};
 use stellar_tokens::rwa::compliance::modules::{
-    common::{set_compliance_address, set_irs_address, ComplianceModuleStorageKey},
     country_restrict::{
         storage::{is_country_restricted, remove_country_restricted, set_country_restricted},
         CountryRestrict, CountryRestricted, CountryUnrestricted,
     },
+    storage::{set_compliance_address, set_irs_address, ComplianceModuleStorageKey},
 };
 
 #[contracttype]

@@ -11,7 +11,7 @@ pub mod storage;
 use soroban_sdk::{contractevent, contracttrait, Address, Env, String, Vec};
 use storage::{is_country_allowed, remove_country_allowed, set_country_allowed};
 
-use super::common::{
+use super::storage::{
     country_code, get_compliance_address, get_irs_country_data_entries, module_name,
     set_irs_address,
 };
@@ -213,7 +213,7 @@ pub trait CountryAllow {
     ///
     /// Implementers must gate this entrypoint with bootstrap-admin auth before
     /// delegating to
-    /// [`common::set_compliance_address`](super::common::set_compliance_address).
+    /// [`storage::set_compliance_address`](super::storage::set_compliance_address).
     ///
     ///
     /// # Panics
