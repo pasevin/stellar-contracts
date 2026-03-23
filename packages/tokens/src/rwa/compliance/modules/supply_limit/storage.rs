@@ -1,6 +1,8 @@
 use soroban_sdk::{contracttype, panic_with_error, Address, Env};
 
-use crate::rwa::compliance::{ComplianceModuleError, MODULE_EXTEND_AMOUNT, MODULE_TTL_THRESHOLD};
+use crate::rwa::compliance::modules::{
+    ComplianceModuleError, MODULE_EXTEND_AMOUNT, MODULE_TTL_THRESHOLD,
+};
 
 #[contracttype]
 #[derive(Clone)]

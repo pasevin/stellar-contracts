@@ -12,7 +12,7 @@ mod test;
 use soroban_sdk::{contractevent, contracttrait, vec, Address, Env, String, Vec};
 use storage::{get_internal_supply, get_supply_limit, set_internal_supply, set_supply_limit};
 
-use super::common::{
+use super::storage::{
     add_i128_or_panic, get_compliance_address, hooks_verified, module_name,
     require_non_negative_amount, sub_i128_or_panic, verify_required_hooks,
 };
@@ -111,6 +111,6 @@ pub trait SupplyLimit {
 
     /// Implementers must gate this entrypoint with bootstrap-admin auth before
     /// delegating to
-    /// [`common::set_compliance_address`](super::common::set_compliance_address).
+    /// [`storage::set_compliance_address`](super::storage::set_compliance_address).
     fn set_compliance_address(e: &Env, compliance: Address);
 }

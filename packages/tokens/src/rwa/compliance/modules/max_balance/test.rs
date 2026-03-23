@@ -10,7 +10,7 @@ use super::{
 };
 use crate::rwa::{
     compliance::{
-        modules::common::{
+        modules::storage::{
             hooks_verified, set_compliance_address, set_irs_address, ComplianceModuleStorageKey,
         },
         Compliance, ComplianceHook,
