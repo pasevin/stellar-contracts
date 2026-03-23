@@ -7,7 +7,7 @@ use soroban_sdk::{
 use super::*;
 use crate::rwa::{
     compliance::{
-        modules::common::{hooks_verified, set_compliance_address, ComplianceModuleStorageKey},
+        modules::storage::{hooks_verified, set_compliance_address, ComplianceModuleStorageKey},
         Compliance, ComplianceHook,
     },
     utils::token_binder::TokenBinder,

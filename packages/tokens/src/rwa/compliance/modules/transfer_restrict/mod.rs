@@ -13,7 +13,7 @@ mod test;
 use soroban_sdk::{contractevent, contracttrait, Address, Env, String, Vec};
 use storage::{is_user_allowed, remove_user_allowed, set_user_allowed};
 
-use super::common::{get_compliance_address, module_name};
+use super::storage::{get_compliance_address, module_name};
 
 /// Emitted when an address is added to the transfer allowlist.
 #[contractevent]
@@ -190,7 +190,7 @@ pub trait TransferRestrict {
     ///
     /// Implementers must gate this entrypoint with bootstrap-admin auth before
     /// delegating to
-    /// [`common::set_compliance_address`](super::common::set_compliance_address).
+    /// [`storage::set_compliance_address`](super::storage::set_compliance_address).
     ///
     ///
     /// # Panics

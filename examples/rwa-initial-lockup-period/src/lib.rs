@@ -3,16 +3,16 @@
 use soroban_sdk::{contract, contractimpl, contracttype, vec, Address, Env, String, Vec};
 use stellar_tokens::rwa::compliance::{
     modules::{
-        common::{
-            add_i128_or_panic, set_compliance_address, sub_i128_or_panic, verify_required_hooks,
-            ComplianceModuleStorageKey,
-        },
         initial_lockup_period::{
             storage::{
                 get_internal_balance, get_locks, get_lockup_period, get_total_locked,
                 set_internal_balance, set_locks, set_lockup_period, set_total_locked,
             },
             InitialLockupPeriod, LockedTokens, LockupPeriodSet,
+        },
+        storage::{
+            add_i128_or_panic, set_compliance_address, sub_i128_or_panic, verify_required_hooks,
+            ComplianceModuleStorageKey,
         },
     },
     ComplianceHook,
@@ -110,12 +110,12 @@ impl InitialLockupPeriod for InitialLockupPeriodContract {
         locks: Vec<LockedTokens>,
     ) {
         require_module_admin_or_compliance_auth(e);
-        stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(e, balance);
+        stellar_tokens::rwa::compliance::modules::storage::require_non_negative_amount(e, balance);
 
         let mut total_locked = 0i128;
         for i in 0..locks.len() {
             let lock = locks.get(i).unwrap();
-            stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(
+            stellar_tokens::rwa::compliance::modules::storage::require_non_negative_amount(
                 e,
                 lock.amount,
             );
@@ -148,7 +148,7 @@ impl InitialLockupPeriod for InitialLockupPeriodContract {
 
     fn on_transfer(e: &Env, from: Address, to: Address, amount: i128, token: Address) {
         require_module_admin_or_compliance_auth(e);
-        stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(e, amount);
+        stellar_tokens::rwa::compliance::modules::storage::require_non_negative_amount(e, amount);
 
         let total_locked = get_total_locked(e, &token, &from);
 
@@ -171,7 +171,7 @@ impl InitialLockupPeriod for InitialLockupPeriodContract {
 
     fn on_created(e: &Env, to: Address, amount: i128, token: Address) {
         require_module_admin_or_compliance_auth(e);
-        stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(e, amount);
+        stellar_tokens::rwa::compliance::modules::storage::require_non_negative_amount(e, amount);
 
         let period = get_lockup_period(e, &token);
         if period > 0 {
@@ -192,7 +192,7 @@ impl InitialLockupPeriod for InitialLockupPeriodContract {
 
     fn on_destroyed(e: &Env, from: Address, amount: i128, token: Address) {
         require_module_admin_or_compliance_auth(e);
-        stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(e, amount);
+        stellar_tokens::rwa::compliance::modules::storage::require_non_negative_amount(e, amount);
 
         let total_locked = get_total_locked(e, &token, &from);
 

@@ -14,11 +14,11 @@ use soroban_sdk::{contractevent, contracttrait, panic_with_error, vec, Address, 
 use storage::{get_counter, get_limits, set_counter, set_limits};
 pub use storage::{Limit, TransferCounter};
 
-use super::common::{
+use super::storage::{
     add_i128_or_panic, get_compliance_address, get_irs_client, hooks_verified, module_name,
     require_non_negative_amount, set_irs_address, verify_required_hooks,
 };
-use crate::rwa::compliance::{ComplianceHook, ComplianceModuleError};
+use crate::rwa::compliance::{modules::ComplianceModuleError, ComplianceHook};
 
 const MAX_LIMITS_PER_TOKEN: u32 = 4;
 
@@ -228,7 +228,7 @@ pub trait TimeTransfersLimits {
 
     /// Implementers must gate this entrypoint with bootstrap-admin auth before
     /// delegating to
-    /// [`common::set_compliance_address`](super::common::set_compliance_address).
+    /// [`storage::set_compliance_address`](super::storage::set_compliance_address).
     fn set_compliance_address(e: &Env, compliance: Address);
 
     // ################## HELPERS ##################

@@ -3,7 +3,7 @@ extern crate std;
 use soroban_sdk::{contract, contractimpl, testutils::Address as _, vec, Address, Env};
 
 use super::*;
-use crate::rwa::compliance::modules::common::set_compliance_address;
+use crate::rwa::compliance::modules::storage::set_compliance_address;
 
 #[contract]
 struct TestTransferRestrictContract;

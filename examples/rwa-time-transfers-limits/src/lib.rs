@@ -5,7 +5,7 @@ use soroban_sdk::{
 };
 use stellar_tokens::rwa::compliance::{
     modules::{
-        common::{
+        storage::{
             add_i128_or_panic, get_irs_client, set_compliance_address, set_irs_address,
             verify_required_hooks, ComplianceModuleStorageKey,
         },
@@ -14,8 +14,9 @@ use stellar_tokens::rwa::compliance::{
             Limit, TimeTransferLimitRemoved, TimeTransferLimitUpdated, TimeTransfersLimits,
             TransferCounter,
         },
+        ComplianceModuleError,
     },
-    ComplianceHook, ComplianceModuleError,
+    ComplianceHook,
 };
 
 const MAX_LIMITS_PER_TOKEN: u32 = 4;
@@ -86,7 +87,7 @@ impl TimeTransfersLimits for TimeTransfersLimitsContract {
     fn set_time_transfer_limit(e: &Env, token: Address, limit: Limit) {
         require_module_admin_or_compliance_auth(e);
         assert!(limit.limit_time > 0, "limit_time must be greater than zero");
-        stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(
+        stellar_tokens::rwa::compliance::modules::storage::require_non_negative_amount(
             e,
             limit.limit_value,
         );
@@ -157,7 +158,7 @@ impl TimeTransfersLimits for TimeTransfersLimitsContract {
         counter: TransferCounter,
     ) {
         require_module_admin_or_compliance_auth(e);
-        stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(
+        stellar_tokens::rwa::compliance::modules::storage::require_non_negative_amount(
             e,
             counter.value,
         );
@@ -188,7 +189,7 @@ impl TimeTransfersLimits for TimeTransfersLimitsContract {
 
     fn on_transfer(e: &Env, from: Address, _to: Address, amount: i128, token: Address) {
         require_module_admin_or_compliance_auth(e);
-        stellar_tokens::rwa::compliance::modules::common::require_non_negative_amount(e, amount);
+        stellar_tokens::rwa::compliance::modules::storage::require_non_negative_amount(e, amount);
         let irs = get_irs_client(e, &token);
         let from_id = irs.stored_identity(&from);
         increase_counters(e, &token, &from_id, amount);

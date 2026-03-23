@@ -18,7 +18,7 @@ use storage::{
     set_locks, set_lockup_period, set_total_locked,
 };
 
-use super::common::{
+use super::storage::{
     add_i128_or_panic, get_compliance_address, hooks_verified, module_name,
     require_non_negative_amount, sub_i128_or_panic, verify_required_hooks,
 };
@@ -257,7 +257,7 @@ pub trait InitialLockupPeriod {
 
     /// Implementers must gate this entrypoint with bootstrap-admin auth before
     /// delegating to
-    /// [`common::set_compliance_address`](super::common::set_compliance_address).
+    /// [`storage::set_compliance_address`](super::storage::set_compliance_address).
     fn set_compliance_address(e: &Env, compliance: Address);
 
     // ################## HELPERS ##################

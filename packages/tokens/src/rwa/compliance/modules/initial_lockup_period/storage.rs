@@ -1,6 +1,6 @@
 use soroban_sdk::{contracttype, Address, Env, Vec};
 
-use crate::rwa::compliance::{MODULE_EXTEND_AMOUNT, MODULE_TTL_THRESHOLD};
+use crate::rwa::compliance::modules::{MODULE_EXTEND_AMOUNT, MODULE_TTL_THRESHOLD};
 
 /// A single mint-created lock entry tracking the locked amount and its
 /// release time. Mirrors T-REX `LockedTokens { amount, releaseTimestamp }`.

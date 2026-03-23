@@ -2,7 +2,7 @@
 
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Vec};
 use stellar_tokens::rwa::compliance::modules::{
-    common::{set_compliance_address, ComplianceModuleStorageKey},
+    storage::{set_compliance_address, ComplianceModuleStorageKey},
     transfer_restrict::{
         storage::{is_user_allowed, remove_user_allowed, set_user_allowed},
         TransferRestrict, UserAllowed, UserDisallowed,

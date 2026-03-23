@@ -1,6 +1,6 @@
 use soroban_sdk::{contracttype, Address, Env, Vec};
 
-use crate::rwa::compliance::{MODULE_EXTEND_AMOUNT, MODULE_TTL_THRESHOLD};
+use crate::rwa::compliance::modules::{MODULE_EXTEND_AMOUNT, MODULE_TTL_THRESHOLD};
 
 /// A single time-window limit: `limit_value` tokens may be transferred
 /// within a rolling window of `limit_time` seconds.
